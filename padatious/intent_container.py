@@ -65,7 +65,7 @@ class IntentContainer(object):
                 self.intents.append(Intent.from_disk(name, self.cache))
             self.train_data.add_lines(name, lines)
 
-    def train(self, print_updates=True):
+    def train(self, print_updates=True, single_thread=False):
         """
         Trains all the loaded intents that need to be updated
         If a cache file exists with the same hash as the intent file,
@@ -80,18 +80,22 @@ class IntentContainer(object):
 
         args = lambda i: (i, self.cache, self.train_data, print_updates)
 
-        # Train in multiple processes to disk
-        pool = mp.Pool()
-        try:
-            results = [
-                pool.apply_async(_train_and_save, args(i))
-                for i in self.intents if not i.is_loaded
-            ]
+        if single_thread:
+            for i in self.intents:
+                _train_and_save(*args(i))
+        else:
+            # Train in multiple processes to disk
+            pool = mp.Pool()
+            try:
+                results = [
+                    pool.apply_async(_train_and_save, args(i))
+                    for i in self.intents if not i.is_loaded
+                ]
 
-            for i in results:
-                i.get()
-        finally:
-            pool.close()
+                for i in results:
+                    i.get()
+            finally:
+                pool.close()
 
         # Load saved intents from disk
         for i, intent in enumerate(self.intents):
