@@ -60,7 +60,7 @@ class Intent(object):
         with open(prefix, 'r') as f:
             tokens = json.load(f)
         for token in tokens:
-            pi = PosIntent(str(token))
+            pi = PosIntent(token)
             pi.load(prefix)
             self.pos_intents.append(pi)
         self.is_loaded = True

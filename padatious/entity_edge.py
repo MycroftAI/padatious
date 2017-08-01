@@ -60,13 +60,13 @@ class EntityEdge(IdObject):
 
     def save(self, prefix):
         prefix += '.' + {-1: 'l', +1: 'r'}[self.dir]
-        self.net.save(prefix + '.net')
+        self.net.save(str(prefix + '.net'))  # Must have str()
         self.save_ids(prefix)
 
     def load(self, prefix):
         prefix += '.' + {-1: 'l', +1: 'r'}[self.dir]
         self.net = neural_net()
-        self.net.create_from_file(prefix + '.net')
+        self.net.create_from_file(str(prefix + '.net'))  # Must have str()
         self.load_ids(prefix)
 
     def train(self, name, train_data):

@@ -99,11 +99,11 @@ class SimpleIntent(IdObject):
 
     def save(self, prefix):
         prefix += '.intent'
-        self.net.save(prefix + '.net')
+        self.net.save(str(prefix + '.net'))  # Must have str()
         self.save_ids(prefix)
 
     def load(self, prefix):
         prefix += '.intent'
         self.net = neural_net()
-        self.net.create_from_file(prefix + '.net')
+        self.net.create_from_file(str(prefix + '.net'))  # Must have str()
         self.load_ids(prefix)
