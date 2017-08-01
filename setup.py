@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='padatious',
-    version='0.1.3',
+    version='0.1.4',
     description='A neural network intent parser',
     url='http://github.com/MycroftAI/padatious',
     author='Matthew Scholefield',
