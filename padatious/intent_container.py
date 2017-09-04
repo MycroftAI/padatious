@@ -41,6 +41,27 @@ class IntentContainer(object):
         self.intents = []
         self.train_data = TrainData()
 
+    def add_intent(self, name, lines, reload_cache=False):
+        """
+        Creates a new intent, optionally checking the cache first
+
+        Args:
+            name (str): The associated name of the intent
+            lines (list<str>): All the sentences that should activate the intent
+            reload_cache: Whether to ignore cached intent if exists
+        """
+        hash_fn = join(self.cache, name + '.hash')
+        old_hsh = None
+        if isfile(hash_fn):
+            with open(hash_fn, 'rb') as g:
+                old_hsh = g.read()
+        new_hsh = lines_hash(lines)
+        if reload_cache or old_hsh != new_hsh:
+            self.intents.append(Intent(name, new_hsh))
+        else:
+            self.intents.append(Intent.from_disk(name, self.cache))
+        self.train_data.add_lines(name, lines)
+
     def load_file(self, name, file_name, reload_cache=False):
         """
         Loads an intent, optionally checking the cache first
@@ -48,22 +69,10 @@ class IntentContainer(object):
         Args:
             name (str): The associated name of the intent
             file_name (str): The location of the intent file
-            reload_cache (bool): Whether to force regenerating all cache files
-                rather than using them to load from
+            reload_cache (bool): Whether to ignore cached intent if exists
         """
         with open(file_name, 'r') as f:
-            lines = f.readlines()
-            hash_fn = join(self.cache, name + '.hash')
-            old_hsh = None
-            if isfile(hash_fn):
-                with open(hash_fn, 'rb') as g:
-                    old_hsh = g.read()
-            new_hsh = lines_hash(lines)
-            if reload_cache or old_hsh != new_hsh:
-                self.intents.append(Intent(name, new_hsh))
-            else:
-                self.intents.append(Intent.from_disk(name, self.cache))
-            self.train_data.add_lines(name, lines)
+            self.add_intent(name, f.readlines())
 
     def train(self, print_updates=True, single_thread=False):
         """
@@ -74,6 +83,7 @@ class IntentContainer(object):
         Args:
             print_updates (bool): Whether to print a message to stdout
                 each time a new intent is trained
+            single_thread (bool): Whether to force running in a single thread
         """
         if not isdir(self.cache):
             mkdir(self.cache)
