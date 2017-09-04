@@ -86,5 +86,5 @@ def resolve_conflicts(inputs, outputs):
 class StrEnum(object):
     """Enum with strings as keys. Implements items method"""
     @classmethod
-    def items(cls):
-        return [i for i in dir(cls) if not i.startswith("__") and i != 'items']
+    def values(cls):
+        return [getattr(cls, i) for i in dir(cls) if not i.startswith("__") and i != 'values']

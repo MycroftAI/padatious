@@ -14,7 +14,7 @@
 
 from fann2.libfann import neural_net, training_data as fann_data, GAUSSIAN
 
-from padatious.id_object import IdObject
+from padatious.id_manager import IdManager
 from padatious.util import resolve_conflicts, StrEnum
 
 
@@ -22,41 +22,41 @@ class Ids(StrEnum):
     unknown_tokens = ':0'
 
 
-class SimpleIntent(IdObject):
+class SimpleIntent(object):
     """General intent used to match sentences or phrases"""
     HID_SIZE = 15
     NUM_HID = 2
     LENIENCE = 0.6
 
     def __init__(self):
-        IdObject.__init__(self, Ids)
+        self.ids = IdManager(Ids)
         self.net = None
 
     def match(self, sent):
         return self.net.run(self.vectorize(sent))[0]
 
     def vectorize(self, sent):
-        vector = self.create_tensor()
+        vector = self.ids.vector()
         unknown = 0
         for token in sent:
-            if self.has_id(token):
-                self.set_id(vector, token, 1.0)
+            if token in self.ids:
+                self.ids.assign(vector, token, 1.0)
             else:
                 unknown += 1
         if len(sent) > 0:
-            self.set_id(vector, Ids.unknown_tokens, unknown / float(len(sent)))
+            self.ids.assign(vector, Ids.unknown_tokens, unknown / float(len(sent)))
         return vector
 
     def configure_net(self):
         self.net = neural_net()
         self.net.create_standard_array(
-            [self.id_len] + [self.HID_SIZE] * self.NUM_HID + [1])
+            [len(self.ids)] + [self.HID_SIZE] * self.NUM_HID + [1])
         self.net.set_activation_function_hidden(GAUSSIAN)
         self.net.set_activation_function_output(GAUSSIAN)
 
     def train(self, name, train_data):
         for sent in train_data.my_sents(name):
-            self.register_sent(sent)
+            self.ids.add_sent(sent)
 
         inputs = []
         outputs = []
@@ -100,10 +100,10 @@ class SimpleIntent(IdObject):
     def save(self, prefix):
         prefix += '.intent'
         self.net.save(str(prefix + '.net'))  # Must have str()
-        self.save_ids(prefix)
+        self.ids.save(prefix)
 
     def load(self, prefix):
         prefix += '.intent'
         self.net = neural_net()
         self.net.create_from_file(str(prefix + '.net'))  # Must have str()
-        self.load_ids(prefix)
+        self.ids.load(prefix)

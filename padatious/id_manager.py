@@ -14,45 +14,46 @@
 
 import json
 
+from padatious.util import StrEnum
 
-class IdObject(object):
+
+class IdManager(object):
     """
-    Gives inheriting object a set of methods
-    for converting tokens to vectors
+    Gives manages specific unique identifiers for tokens.
+    Used to convert tokens to vectors
     """
-    def __init__(self, id_cls, ids=None):
+    def __init__(self, id_cls=StrEnum, ids=None):
         if ids is not None:
             self.ids = ids
         else:
             self.ids = {}
-            for i in id_cls.items():
-                self.register_token(getattr(id_cls, i))
+            for i in id_cls.values():
+                self.add_token(i)
 
-    @property
-    def id_len(self):
+    def __len__(self):
         return len(self.ids)
 
-    def create_tensor(self):
-        return [0.0] * self.id_len
+    def vector(self):
+        return [0.0] * len(self.ids)
 
-    def save_ids(self, prefix):
+    def save(self, prefix):
         with open(prefix + '.ids', 'w') as f:
             json.dump(self.ids, f)
 
-    def load_ids(self, prefix):
+    def load(self, prefix):
         with open(prefix + '.ids', 'r') as f:
             self.ids = json.load(f)
 
-    def set_id(self, vector, key, val):
+    def assign(self, vector, key, val):
         vector[self.ids[key]] = val
 
-    def has_id(self, id):
+    def __contains__(self, id):
         return id in self.ids
 
-    def register_token(self, token):
+    def add_token(self, token):
         if token not in self.ids:
             self.ids[token] = len(self.ids)
 
-    def register_sent(self, sent):
+    def add_sent(self, sent):
         for token in sent:
-            self.register_token(token)
+            self.add_token(token)
