@@ -32,7 +32,7 @@ class PosIntent(object):
     def match(self, orig_data):
         l_matches = [(self.edges[0].match(orig_data.sent, pos), pos)
                      for pos in range(len(orig_data.sent))]
-        r_matches = [(self.edges[0].match(orig_data.sent, pos), pos)
+        r_matches = [(self.edges[1].match(orig_data.sent, pos), pos)
                      for pos in range(len(orig_data.sent))]
 
         def is_valid(l_pos, r_pos):
