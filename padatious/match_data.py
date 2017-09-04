@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 class MatchData(object):
     """
     A set of data describing how a query fits into an intent
