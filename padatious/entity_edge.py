@@ -20,6 +20,7 @@ from padatious.util import StrEnum, resolve_conflicts
 
 class Ids(StrEnum):
     unknown_tokens = ':0'
+    end = ':end'
 
 
 class EntityEdge(object):
@@ -40,16 +41,17 @@ class EntityEdge(object):
     def vectorize(self, sent, pos):
         unknown = 0
         vector = self.ids.vector()
-        for i in range(pos + self.dir, self.get_end(sent), self.dir):
+        end_pos = self.get_end(sent)
+        for i in range(pos + self.dir, end_pos, self.dir):
             if sent[i] in self.ids:
                 self.ids.assign(vector, sent[i], 1.0 / abs(i - pos))
             else:
                 unknown += 1
+        self.ids.assign(vector, Ids.end, 1.0 / abs(end_pos - pos))
         self.ids.assign(vector, Ids.unknown_tokens, unknown / len(sent))
         return vector
 
     def match(self, sent, pos):
-        print(sent, pos, self.dir, round(self.net.run(self.vectorize(sent, pos))[0], 2))
         return self.net.run(self.vectorize(sent, pos))[0]
 
     def configure_net(self):
