@@ -29,12 +29,12 @@ class EntityEdge(object):
 
     Args:
         token (str): token to attach to (something like {word})
-        dir (int): -1 for left and +1 for right
+        direction (int): -1 for left and +1 for right
     """
-    def __init__(self, token, dir):
+    def __init__(self, token, direction):
         self.ids = IdManager(Ids)
         self.token = token
-        self.dir = dir
+        self.dir = direction
         self.get_end = lambda x: len(x) if self.dir > 0 else -1
         self.net = None
 

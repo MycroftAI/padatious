@@ -33,8 +33,8 @@ class Intent(object):
     def match(self, sent):
         possible_matches = [MatchData(self.name, sent)]
         for pi in self.pos_intents:
-            for i in range(len(possible_matches)):
-                possible_matches += pi.match(possible_matches[i])
+            for i in possible_matches:
+                possible_matches += pi.match(i)
 
         data = max(possible_matches, key=lambda x: x.conf)
         data.conf = self.simple_intent.match(data.sent)

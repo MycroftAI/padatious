@@ -23,7 +23,7 @@ setup(
         'Intended Audience :: Developers',
         'Topic :: Text Processing :: Linguistic',
         'License :: OSI Approved :: Apache Software License',
-         
+
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
@@ -36,5 +36,4 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     keywords='intent-parser parser text text-processing',
-    
 )

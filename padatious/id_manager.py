@@ -47,8 +47,8 @@ class IdManager(object):
     def assign(self, vector, key, val):
         vector[self.ids[key]] = val
 
-    def __contains__(self, id):
-        return id in self.ids
+    def __contains__(self, token):
+        return token in self.ids
 
     def add_token(self, token):
         if token not in self.ids:

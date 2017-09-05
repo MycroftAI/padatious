@@ -53,8 +53,8 @@ def tokenize(sentence):
                 tokens.append(c)
             Vars.last_pos = -1
 
-    for i in range(len(sentence)):
-        update(sentence[i], i)
+    for i, char in enumerate(sentence):
+        update(char, i)
     update(' ', len(sentence))
     return tokens
 
@@ -70,10 +70,10 @@ def resolve_conflicts(inputs, outputs):
         tuple<inputs, outputs>: The modified inputs and outputs
     """
     new_in, new_out = [], []
-    for i in range(len(inputs)):
+    for i, inp in enumerate(inputs):
         found_duplicate = False
         for j in range(i + 1, len(inputs)):
-            if inputs[i] == inputs[j]:
+            if inp == inputs[j]:
                 found_duplicate = True
                 if outputs[i] > outputs[j]:
                     outputs[j] = outputs[i]
