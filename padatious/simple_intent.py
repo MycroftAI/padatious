@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fann2.libfann import neural_net, training_data as fann_data, GAUSSIAN
+from fann2.libfann import neural_net, training_data as fann_data, GAUSSIAN, STOPFUNC_BIT
 
 from padatious.id_manager import IdManager
 from padatious.util import resolve_conflicts, StrEnum
@@ -48,11 +48,14 @@ class SimpleIntent(object):
         return vector
 
     def configure_net(self):
+        layers = [len(self.ids)] + [self.HID_SIZE] * self.NUM_HID + [1]
+
         self.net = neural_net()
-        self.net.create_standard_array(
-            [len(self.ids)] + [self.HID_SIZE] * self.NUM_HID + [1])
+        self.net.create_standard_array(layers)
         self.net.set_activation_function_hidden(GAUSSIAN)
         self.net.set_activation_function_output(GAUSSIAN)
+        self.net.set_train_stop_function(STOPFUNC_BIT)
+        self.net.set_bit_fail_limit(0.1)
 
     def train(self, name, train_data):
         for sent in train_data.my_sents(name):
@@ -95,7 +98,7 @@ class SimpleIntent(object):
         train_data.set_train_data(inputs, outputs)
 
         self.configure_net()
-        self.net.train_on_data(train_data, 10000, 0, 0.001)
+        self.net.train_on_data(train_data, 10000, 0, 0)
 
     def save(self, prefix):
         prefix += '.intent'

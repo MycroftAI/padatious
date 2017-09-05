@@ -45,16 +45,15 @@ class PosIntent(object):
 
         possible_matches = []
         for l_conf, l_pos in l_matches:
-            if l_conf < 0.5:
+            if l_conf < 0.05:
                 continue
             for r_conf, r_pos in r_matches:
-                if r_conf < 0.5:
+                if r_conf < 0.05:
                     continue
                 if not is_valid(l_pos, r_pos):
                     continue
                 extra_conf = (l_conf - 0.5 + r_conf - 0.5) / 2
-                new_sent = orig_data.sent[:l_pos] + [
-                    self.token] + orig_data.sent[r_pos + 1:]
+                new_sent = orig_data.sent[:l_pos] + [self.token] + orig_data.sent[r_pos + 1:]
                 new_matches = orig_data.matches.copy()
                 new_matches[self.token] = orig_data.sent[l_pos:r_pos + 1]
                 data = MatchData(orig_data.name, new_sent, new_matches,

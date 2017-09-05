@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fann2.libfann import neural_net, training_data as fann_data, GAUSSIAN
+from fann2 import libfann as fann
 
 from padatious.id_manager import IdManager
 from padatious.util import StrEnum, resolve_conflicts
@@ -57,10 +57,13 @@ class EntityEdge(object):
     def configure_net(self):
         hid_size = max(int(len(self.ids) / 2 + 0.5), 1)
         layers = [len(self.ids), hid_size, 1]
-        self.net = neural_net()
+
+        self.net = fann.neural_net()
         self.net.create_standard_array(layers)
-        self.net.set_activation_function_hidden(GAUSSIAN)
-        self.net.set_activation_function_output(GAUSSIAN)
+        self.net.set_activation_function_hidden(fann.GAUSSIAN)
+        self.net.set_activation_function_output(fann.GAUSSIAN)
+        self.net.set_train_stop_function(fann.STOPFUNC_BIT)
+        self.net.set_bit_fail_limit(0.1)
 
     def save(self, prefix):
         prefix += '.' + {-1: 'l', +1: 'r'}[self.dir]
@@ -69,7 +72,7 @@ class EntityEdge(object):
 
     def load(self, prefix):
         prefix += '.' + {-1: 'l', +1: 'r'}[self.dir]
-        self.net = neural_net()
+        self.net = fann.neural_net()
         self.net.create_from_file(str(prefix + '.net'))  # Must have str()
         self.ids.load(prefix)
 
@@ -92,8 +95,8 @@ class EntityEdge(object):
         add_sents(train_data.other_sents(name), lambda x: 0.0)
         inputs, outputs = resolve_conflicts(inputs, outputs)
 
-        data = fann_data()
+        data = fann.training_data()
         data.set_train_data(inputs, outputs)
 
         self.configure_net()
-        self.net.train_on_data(data, 10000, 0, 0.001)
+        self.net.train_on_data(data, 10000, 0, 0)
