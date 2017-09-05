@@ -70,7 +70,7 @@ class SimpleIntent(object):
 
         def pollute(sent, p):
             sent = sent[:]
-            for i in range(int((len(sent) + 2) / 3)):
+            for _ in range(int((len(sent) + 2) / 3)):
                 sent.insert(p, ':null:')
             add(sent, self.LENIENCE)
 

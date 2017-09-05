@@ -14,9 +14,7 @@
 
 from os import mkdir
 from os.path import isdir
-from random import seed, randint
 from shutil import rmtree
-from time import time
 
 from padatious.intent import Intent
 from padatious.train_data import TrainData

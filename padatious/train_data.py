@@ -34,7 +34,7 @@ class TrainData(object):
             self.add_lines(name, f.readlines())
 
     def all_sents(self):
-        for name, sents in self.sent_lists.items():
+        for _, sents in self.sent_lists.items():
             for i in sents:
                 yield i
 
