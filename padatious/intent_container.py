@@ -72,7 +72,7 @@ class IntentContainer(object):
             reload_cache (bool): Whether to ignore cached intent if exists
         """
         with open(file_name, 'r') as f:
-            self.add_intent(name, f.readlines())
+            self.add_intent(name, f.readlines(), reload_cache)
 
     def train(self, print_updates=True, single_thread=False):
         """
