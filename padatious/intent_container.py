@@ -88,7 +88,8 @@ class IntentContainer(object):
         if not isdir(self.cache):
             mkdir(self.cache)
 
-        args = lambda i: (i, self.cache, self.train_data, print_updates)
+        def args(i):
+            return i, self.cache, self.train_data, print_updates
 
         if single_thread:
             for i in self.intents:

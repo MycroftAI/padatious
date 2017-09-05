@@ -38,4 +38,3 @@ class MatchData(object):
             new_token = token.replace('{', '').replace('}', '')
             new_matches[new_token] = ' '.join(sent)
         self.matches = new_matches
-
