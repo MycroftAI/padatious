@@ -2,6 +2,9 @@
 
 from setuptools import setup
 
+with open('requirements.txt') as f:
+    requirements = f.readlines()
+
 setup(
     name='padatious',
     version='0.1.4',
@@ -13,10 +16,7 @@ setup(
     packages=[
         'padatious'
     ],
-    install_requires=[
-        'fann2',
-        'xxhash'
-    ],
+    install_requires=requirements,
     zip_safe=True,
     classifiers=[
         'Development Status :: 3 - Alpha',
