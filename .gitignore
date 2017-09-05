@@ -5,3 +5,6 @@ dist/
 intent_cache/
 __pycache__/
 *.pyc
+
+.cache/
+.coverage*
