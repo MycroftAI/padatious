@@ -19,7 +19,6 @@ from padatious.util import StrEnum, resolve_conflicts
 
 
 class Ids(StrEnum):
-    unknown_tokens = ':0'
     end = ':end'
 
 
@@ -48,7 +47,6 @@ class EntityEdge(object):
             else:
                 unknown += 1
         self.ids.assign(vector, Ids.end, 1.0 / abs(end_pos - pos))
-        self.ids.assign(vector, Ids.unknown_tokens, unknown / len(sent))
         return vector
 
     def match(self, sent, pos):

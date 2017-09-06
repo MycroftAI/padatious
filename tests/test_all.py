@@ -47,10 +47,8 @@ class TestAll:
 
     def test_multi_extraction_easy(self):
         self.cont.add_intent('search', [
-            'search for {query} using {engine}',
-            'find {query} using {engine}',
-            'using {engine}, search for {query}',
-            'using {engine}, find {query}'
+            '(search for|find) {query} (using|on) {engine}',
+            '(using|on) {engine}, (search for|find) {query}'
         ])
         self.cont.add_intent('order', [
             'order some {food} from {store}',
@@ -62,6 +60,11 @@ class TestAll:
         data = self.cont.calc_intent('search for bananas using random food search')
         assert data.name == 'search'
         assert data.matches == {'query': 'bananas', 'engine': 'random food search'}
+        assert data.conf > 0.5
+
+        data = self.cont.calc_intent('search for big furry cats using the best search engine')
+        assert data.name == 'search'
+        assert data.matches == {'query': 'big furry cats', 'engine': 'the best search engine'}
         assert data.conf > 0.5
 
         data = self.cont.calc_intent('place an order for a loaf of bread on foodbuywebsite')
