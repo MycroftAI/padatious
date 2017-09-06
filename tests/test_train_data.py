@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
+from os.path import isfile
 
 from padatious.train_data import TrainData
 
@@ -18,9 +20,11 @@ from padatious.train_data import TrainData
 class TestTrainData:
     def setup(self):
         self.data = TrainData()
+        with open('temp', 'w') as f:
+            f.writelines(['hi'])
 
     def test_add_lines(self):
-        self.data.add_lines('hi', ['hi'])
+        self.data.add_file('hi', 'temp')
         self.data.add_lines('bye', ['bye'])
         self.data.add_lines('other', ['other'])
 
@@ -30,3 +34,7 @@ class TestTrainData:
         assert cmp(self.data.my_sents('hi'), [['hi']])
         assert cmp(self.data.other_sents('hi'), [['bye'], ['other']])
         assert cmp(self.data.all_sents(), [['hi'], ['bye'], ['other']])
+
+    def teardown(self):
+        if isfile('temp'):
+            os.remove('temp')
