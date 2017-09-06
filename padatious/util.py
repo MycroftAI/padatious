@@ -59,6 +59,72 @@ def tokenize(sentence):
     return tokens
 
 
+def expand_parentheses(sent):
+    """
+    ['1', '(', '2', '|', '3, ')'] -> [['1', '2'], ['1', '3']]
+    For example:
+
+    Will it (rain|pour) (today|tomorrow|)?
+
+    ---->
+
+    Will it rain today?
+    Will it rain tomorrow?
+    Will it rain?
+    Will it pour today?
+    Will it pour tomorrow?
+    Will it pour?
+
+    Args:
+        sent (list<str>): List of tokens in sentence
+    Returns:
+        list<list<str>>: Multiple possible sentences from original
+    """
+    if '(' not in sent or '|' not in sent:
+        return [sent]
+    else:
+        class State:  # Parentheses state
+            IN = 0
+            OUT = 1
+        state = State.OUT
+        all_pars = {}
+        par_groups = []
+        cur_group = []
+
+        remaining = []
+
+        for token in sent:
+            if state == State.IN:
+                if token in ')|':
+                    par_groups.append(cur_group)
+                    cur_group = []
+                else:
+                    cur_group.append(token)
+                if token == ')':
+                    state = State.OUT
+                    all_pars[len(remaining)] = par_groups
+                    remaining.append('()')
+                    par_groups = []
+            elif state == State.OUT:
+                if token == '(':
+                    state = State.IN
+                else:
+                    remaining.append(token)
+
+        sents = [[]]
+        for i, token in enumerate(remaining):
+            if token == '()':
+                for j in list(range(len(sents))):
+                    pairs = all_pars[i]
+                    for p in pairs[1:]:
+                        sents.append(sents[j] + p)
+                    sents[j] += pairs[0]
+            else:
+                for sent in sents:
+                    sent.append(token)
+        return sents
+
+
 def resolve_conflicts(inputs, outputs):
     """
     Checks for duplicate inputs and if there are any,

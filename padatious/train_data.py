@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import tokenize
-from padatious.util import tokenize
+from padatious.util import tokenize, expand_parentheses
 
 
 class TrainData(object):
@@ -26,8 +25,12 @@ class TrainData(object):
         self.sent_lists = {}
 
     def add_lines(self, name, lines):
-        self.sent_lists[name] = [tokenize(line)
-                                 for line in lines if not line.isspace()]
+        sents = []
+        for line in lines:
+            if not line.isspace():
+                tokens = tokenize(line)
+                sents += expand_parentheses(tokens)
+        self.sent_lists[name] = sents
 
     def add_file(self, name, file_name):
         with open(file_name, 'r') as f:
