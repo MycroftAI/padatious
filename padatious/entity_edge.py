@@ -81,7 +81,8 @@ class EntityEdge(object):
             if self.token in sent:
                 for i in range(sent.index(self.token) + self.dir,
                                self.get_end(sent), self.dir):
-                    self.ids.add_token(sent[i])
+                    if sent[i][0] != '{':
+                        self.ids.add_token(sent[i])
 
         inputs, outputs = [], []
 

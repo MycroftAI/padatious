@@ -45,10 +45,10 @@ class PosIntent(object):
 
         possible_matches = []
         for l_conf, l_pos in l_matches:
-            if l_conf < 0.05:
+            if l_conf < 0.5:
                 continue
             for r_conf, r_pos in r_matches:
-                if r_conf < 0.05:
+                if r_conf < 0.5:
                     continue
                 if not is_valid(l_pos, r_pos):
                     continue
