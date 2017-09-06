@@ -16,6 +16,7 @@ import multiprocessing as mp
 from os import mkdir
 from os.path import join, isfile, isdir
 
+import padatious
 from padatious.intent import Intent
 from padatious.train_data import TrainData
 from padatious.util import lines_hash, tokenize
@@ -55,7 +56,7 @@ class IntentContainer(object):
         if isfile(hash_fn):
             with open(hash_fn, 'rb') as g:
                 old_hsh = g.read()
-        new_hsh = lines_hash(lines)
+        new_hsh = lines_hash([padatious.__version__] + lines)
         if reload_cache or old_hsh != new_hsh:
             self.intents.append(Intent(name, new_hsh))
         else:
