@@ -22,6 +22,26 @@ class TestAll:
     def setup(self):
         self.cont = IntentContainer('temp')
 
+    def test_simple(self):
+        self.cont.add_intent('hello', [
+            'hello',
+            'hi',
+            'how are you',
+            'whats up'
+        ])
+        self.cont.add_intent('goodbye', [
+            'see you',
+            'later',
+            'bye',
+            'goodbye',
+            'another time'
+        ])
+        self.cont.train(False)
+
+        data = self.cont.calc_intent('whats up')
+        assert data.name == 'hello'
+        assert data.conf > 0.5
+
     def test_single_extraction(self):
         self.cont.add_intent('drive', [
             'drive to {place}',
@@ -47,6 +67,7 @@ class TestAll:
 
     def test_multi_extraction_easy(self):
         self.cont.add_intent('search', [
+            '(search for|find) {query}',
             '(search for|find) {query} (using|on) {engine}',
             '(using|on) {engine}, (search for|find) {query}'
         ])
@@ -56,6 +77,11 @@ class TestAll:
         ])
 
         self.cont.train(False)
+
+        data = self.cont.calc_intent('search for funny dog videos')
+        assert data.name == 'search'
+        assert data.matches == {'query': 'funny dog videos'}
+        assert data.conf > 0.5
 
         data = self.cont.calc_intent('search for bananas using random food search')
         assert data.name == 'search'
@@ -71,6 +97,16 @@ class TestAll:
         assert data.name == 'order'
         assert data.matches == {'food': 'a loaf of bread', 'store': 'foodbuywebsite'}
         assert data.conf > 0.5
+
+    def test_extraction_dependence(self):
+        self.cont.add_intent('search', [
+            'wiki {query}'
+        ])
+
+        self.cont.train(False)
+
+        data = self.cont.calc_intent('wiki')
+        assert data.conf < 0.5
 
     def teardown(self):
         if isdir('temp'):
