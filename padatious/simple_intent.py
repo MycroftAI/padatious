@@ -17,6 +17,8 @@ from fann2.libfann import neural_net, training_data as fann_data, GAUSSIAN, STOP
 from padatious.id_manager import IdManager
 from padatious.util import resolve_conflicts, StrEnum
 
+import math
+
 
 class Ids(StrEnum):
     unknown_tokens = ':0'
