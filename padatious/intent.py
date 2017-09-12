@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import json
+import math
 from os.path import join
 
 from padatious.match_data import MatchData
@@ -37,7 +38,12 @@ class Intent(object):
                 possible_matches += pi.match(i)
 
         data = max(possible_matches, key=lambda x: x.conf)
-        data.conf = self.simple_intent.match(data.sent)
+        if data.conf <= 0.0:
+            conf = self.simple_intent.match(sent)
+            data = MatchData(self.name, sent, conf=conf)
+        else:
+            conf = self.simple_intent.match(data.sent)
+            data.conf = math.sqrt(conf * (data.conf / len(data.matches) + 0.5))
         return data
 
     def save(self, folder):

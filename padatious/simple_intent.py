@@ -17,6 +17,8 @@ from fann2.libfann import neural_net, training_data as fann_data, GAUSSIAN, STOP
 from padatious.id_manager import IdManager
 from padatious.util import resolve_conflicts, StrEnum
 
+import math
+
 
 class Ids(StrEnum):
     unknown_tokens = ':0'
@@ -24,7 +26,6 @@ class Ids(StrEnum):
 
 class SimpleIntent(object):
     """General intent used to match sentences or phrases"""
-    HID_SIZE = 15
     NUM_HID = 2
     LENIENCE = 0.6
 
@@ -48,7 +49,7 @@ class SimpleIntent(object):
         return vector
 
     def configure_net(self):
-        layers = [len(self.ids)] + [self.HID_SIZE] * self.NUM_HID + [1]
+        layers = [len(self.ids)] + [len(self.ids) // 2] * self.NUM_HID + [1]
 
         self.net = neural_net()
         self.net.create_standard_array(layers)
