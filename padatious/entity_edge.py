@@ -34,8 +34,10 @@ class EntityEdge(object):
         self.ids = IdManager(Ids)
         self.token = token
         self.dir = direction
-        self.get_end = lambda x: len(x) if self.dir > 0 else -1
         self.net = None
+
+    def get_end(self, sent):
+        return len(sent) if self.dir > 0 else -1
 
     def vectorize(self, sent, pos):
         unknown = 0
