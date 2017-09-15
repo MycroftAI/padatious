@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from xxhash import xxh32
+import numpy as np
 
 
 def lines_hash(lines):
@@ -135,18 +136,19 @@ def resolve_conflicts(inputs, outputs):
     Returns:
         tuple<inputs, outputs>: The modified inputs and outputs
     """
-    new_in, new_out = [], []
-    for i, inp in enumerate(inputs):
-        found_duplicate = False
-        for j in range(i + 1, len(inputs)):
-            if inp == inputs[j]:
-                found_duplicate = True
-                if outputs[i] > outputs[j]:
-                    outputs[j] = outputs[i]
-        if not found_duplicate:
-            new_in.append(inputs[i])
-            new_out.append(outputs[i])
-    return new_in, new_out
+    data = {}
+    for inp, out in zip(inputs, outputs):
+        tup = tuple(inp)
+        if tup in data:
+            data[tup].append(out)
+        else:
+            data[tup] = [out]
+
+    inputs, outputs = [], []
+    for inp, outs in data.items():
+        inputs.append(list(inp))
+        outputs.append(np.maximum.reduce(outs))
+    return inputs, outputs
 
 
 class StrEnum(object):
