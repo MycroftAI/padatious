@@ -41,18 +41,26 @@ def tokenize(sentence):
     tokens = []
 
     class Vars:
-        last_pos = -1
+        start_pos = -1
+        last_type = 'o'
 
     def update(c, i):
         if c.isalpha() or c in '-{}':
-            if Vars.last_pos < 0:
-                Vars.last_pos = i
+            t = 'a'
+        elif c.isnumeric() or c == '#':
+            t = 'n'
+        elif c.isspace():
+            t = 's'
         else:
-            if Vars.last_pos >= 0:
-                tokens.append(sentence[Vars.last_pos:i].lower())
-            if not c.isspace() and c not in '.!?':
-                tokens.append(c)
-            Vars.last_pos = -1
+            t = 'o'
+
+        if t != Vars.last_type or t == 'o':
+            if Vars.start_pos >= 0:
+                token = sentence[Vars.start_pos:i].lower()
+                if token not in '.!?':
+                    tokens.append(token)
+            Vars.start_pos = -1 if t == 's' else i
+        Vars.last_type = t
 
     for i, char in enumerate(sentence):
         update(char, i)

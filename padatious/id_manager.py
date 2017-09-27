@@ -33,6 +33,14 @@ class IdManager(object):
     def __len__(self):
         return len(self.ids)
 
+    @staticmethod
+    def adj_token(token):
+        if token.isnumeric():
+            for i in range(10):
+                if str(i) in token:
+                    token = token.replace(str(i), '#')
+        return token
+
     def vector(self):
         return [0.0] * len(self.ids)
 
@@ -45,12 +53,13 @@ class IdManager(object):
             self.ids = json.load(f)
 
     def assign(self, vector, key, val):
-        vector[self.ids[key]] = val
+        vector[self.ids[self.adj_token(key)]] = val
 
     def __contains__(self, token):
-        return token in self.ids
+        return self.adj_token(token) in self.ids
 
     def add_token(self, token):
+        token = self.adj_token(token)
         if token not in self.ids:
             self.ids[token] = len(self.ids)
 
