@@ -30,6 +30,9 @@ class MatchData(object):
         self.matches = matches or {}
         self.conf = conf
 
+    def __repr__(self):
+        return repr(self.__dict__)
+
     # Converts parameters from lists of tokens to one combined string
     def detokenize(self):
         self.sent = ' '.join(self.sent)

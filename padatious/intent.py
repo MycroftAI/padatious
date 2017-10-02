@@ -19,32 +19,31 @@ from os.path import join
 from padatious.match_data import MatchData
 from padatious.pos_intent import PosIntent
 from padatious.simple_intent import SimpleIntent
+from padatious.trainable import Trainable
 
 
-class Intent(object):
+class Intent(Trainable):
     """Full intent object to handle entity extraction and intent matching"""
 
-    def __init__(self, name, hsh=b''):
-        self.name = name
-        self.hash = hsh
-        self.simple_intent = SimpleIntent()
+    def __init__(self, *args, **kwargs):
+        super(Intent, self).__init__(*args, **kwargs)
+        self.simple_intent = SimpleIntent(self.name)
         self.pos_intents = []
-        self.is_loaded = False
 
-    def match(self, sent):
+    def match(self, sent, entities=None):
         possible_matches = [MatchData(self.name, sent)]
         for pi in self.pos_intents:
-            for i in possible_matches:
-                possible_matches += pi.match(i)
+            entity = entities.find(self.name, pi.token) if entities else None
+            for i in list(possible_matches):
+                possible_matches += pi.match(i, entity)
 
-        data = max(possible_matches, key=lambda x: x.conf)
-        if data.conf <= 0.0:
-            conf = self.simple_intent.match(sent)
-            data = MatchData(self.name, sent, conf=conf)
-        else:
-            conf = self.simple_intent.match(data.sent)
-            data.conf = math.sqrt(conf * (data.conf / len(data.matches) + 0.5))
-        return data
+        possible_matches = [i for i in possible_matches if i.conf >= 0.0]
+
+        for i in possible_matches:
+            conf = ((i.conf / len(i.matches)) if len(i.matches) > 0 else 0) + 0.5
+            i.conf = math.sqrt(conf * self.simple_intent.match(i.sent))
+
+        return max(possible_matches, key=lambda x: x.conf)
 
     def save(self, folder):
         prefix = join(folder, self.name)
@@ -57,32 +56,24 @@ class Intent(object):
         for pos_intent in self.pos_intents:
             pos_intent.save(prefix)
 
-    def load(self, folder):
-        prefix = join(folder, self.name)
-        with open(prefix + '.hash', 'rb') as f:
-            self.hash = f.read()
-        self.simple_intent.load(prefix)
+    @classmethod
+    def from_file(cls, name, folder):
+        self = cls(name)
+        prefix = join(folder, name)
+        self.load_hash(prefix)
+        self.simple_intent = SimpleIntent.from_file(name, prefix)
         prefix += '.pos'
         with open(prefix, 'r') as f:
             tokens = json.load(f)
         for token in tokens:
-            pi = PosIntent(token)
-            pi.load(prefix)
-            self.pos_intents.append(pi)
-        self.is_loaded = True
-
-    @classmethod
-    def from_disk(cls, name, folder):
-        i = cls(name)
-        i.load(folder)
-        return i
+            self.pos_intents.append(PosIntent.from_file(prefix, token))
+        return self
 
     def train(self, train_data):
         tokens = set([token for sent in train_data.my_sents(self.name)
                       for token in sent if token.startswith('{')])
-        self.pos_intents = [PosIntent(i) for i in tokens]
+        self.pos_intents = [PosIntent(i, self.name) for i in tokens]
 
-        self.simple_intent.train(self.name, train_data)
+        self.simple_intent.train(train_data)
         for i in self.pos_intents:
-            i.train(self.name, train_data)
-        self.is_loaded = True
+            i.train(train_data)

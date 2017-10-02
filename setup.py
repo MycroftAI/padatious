@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-
+from os.path import join, basename, abspath, dirname
 from setuptools import setup
 
-with open('requirements.txt') as f:
+with open(join(dirname(abspath(__file__)), 'requirements.txt')) as f:
     requirements = f.readlines()
 
 setup(

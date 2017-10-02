@@ -20,12 +20,12 @@ class TestEntityEdge:
     def setup(self):
         self.data = TrainData()
         self.data.add_lines('', ['a {word} here', 'the {word} here'])
-        self.le = EntityEdge('{word}', -1)
-        self.re = EntityEdge('{word}', +1)
+        self.le = EntityEdge(-1, '{word}', '')
+        self.re = EntityEdge(+1, '{word}', '')
 
     def test_match(self):
-        self.le.train('', self.data)
-        self.re.train('', self.data)
+        self.le.train(self.data)
+        self.re.train(self.data)
         sent = ['a', '{word}', 'here']
         assert self.le.match(sent, 1) > self.le.match(sent, 0)
         assert self.le.match(sent, 1) > self.le.match(sent, 2)

@@ -47,7 +47,7 @@ def tokenize(sentence):
     def update(c, i):
         if c.isalpha() or c in '-{}':
             t = 'a'
-        elif c.isnumeric() or c == '#':
+        elif c.isdigit() or c == '#':
             t = 'n'
         elif c.isspace():
             t = 's'

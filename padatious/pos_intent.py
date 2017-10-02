@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
+
 from padatious.entity_edge import EntityEdge
 from padatious.match_data import MatchData
 
@@ -25,11 +27,11 @@ class PosIntent(object):
         token (str): token to attach to (something like {word})
     """
 
-    def __init__(self, token):
+    def __init__(self, token, intent_name=''):
         self.token = token
-        self.edges = [EntityEdge(token, -1), EntityEdge(token, +1)]
+        self.edges = [EntityEdge(-1, token, intent_name), EntityEdge(+1, token, intent_name)]
 
-    def match(self, orig_data):
+    def match(self, orig_data, entity=None):
         l_matches = [(self.edges[0].match(orig_data.sent, pos), pos)
                      for pos in range(len(orig_data.sent))]
         r_matches = [(self.edges[1].match(orig_data.sent, pos), pos)
@@ -52,10 +54,17 @@ class PosIntent(object):
                     continue
                 if not is_valid(l_pos, r_pos):
                     continue
-                extra_conf = (l_conf - 0.5 + r_conf - 0.5) / 2
+
+                extracted = orig_data.sent[l_pos:r_pos + 1]
+
+                pos_conf = (l_conf - 0.5 + r_conf - 0.5) / 2 + 0.5
+                ent_conf = (entity.match(extracted) if entity else 1)
+
                 new_sent = orig_data.sent[:l_pos] + [self.token] + orig_data.sent[r_pos + 1:]
                 new_matches = orig_data.matches.copy()
-                new_matches[self.token] = orig_data.sent[l_pos:r_pos + 1]
+                new_matches[self.token] = extracted
+
+                extra_conf = math.sqrt(pos_conf * ent_conf) - 0.5
                 data = MatchData(orig_data.name, new_sent, new_matches,
                                  orig_data.conf + extra_conf)
                 possible_matches.append(data)
@@ -66,11 +75,14 @@ class PosIntent(object):
         for i in self.edges:
             i.save(prefix)
 
-    def load(self, prefix):
-        prefix += '.' + self.token
+    @classmethod
+    def from_file(cls, prefix, token):
+        prefix += '.' + token
+        self = cls(token)
         for i in self.edges:
             i.load(prefix)
+        return self
 
-    def train(self, name, train_data):
+    def train(self, train_data):
         for i in self.edges:
-            i.train(name, train_data)
+            i.train(train_data)

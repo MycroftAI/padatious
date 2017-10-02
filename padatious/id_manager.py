@@ -35,7 +35,7 @@ class IdManager(object):
 
     @staticmethod
     def adj_token(token):
-        if token.isnumeric():
+        if token.isdigit():
             for i in range(10):
                 if str(i) in token:
                     token = token.replace(str(i), '#')

@@ -42,9 +42,9 @@ class TestIntentContainer:
         with open(fn2, 'w') as f:
             f.writelines(self.other_lines)
 
-        self.cont.load_file('test', fn1)
-        self.cont.load_file('other', fn1)
-        assert len(self.cont.train_data.sent_lists) == 2
+        self.cont.load_intent('test', fn1)
+        self.cont.load_intent('other', fn1)
+        assert len(self.cont.intents.train_data.sent_lists) == 2
 
     def test_train(self):
         def test(a, b):

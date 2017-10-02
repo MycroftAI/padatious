@@ -27,11 +27,13 @@ class EntityEdge(object):
     Represents the left or right side of an entity (a PosIntent)
 
     Args:
-        token (str): token to attach to (something like {word})
         direction (int): -1 for left and +1 for right
+        token (str): token to attach to (something like {word})
+        intent_name (str): name of parent intent
     """
-    def __init__(self, token, direction):
+    def __init__(self,  direction, token, intent_name):
         self.ids = IdManager(Ids)
+        self.intent_name = intent_name
         self.token = token
         self.dir = direction
         self.net = None
@@ -55,13 +57,12 @@ class EntityEdge(object):
         return self.net.run(self.vectorize(sent, pos))[0]
 
     def configure_net(self):
-        hid_size = max(int(len(self.ids) / 2 + 0.5), 1)
-        layers = [len(self.ids), hid_size, 1]
+        layers = [len(self.ids), 3, 1]
 
         self.net = fann.neural_net()
         self.net.create_standard_array(layers)
-        self.net.set_activation_function_hidden(fann.GAUSSIAN)
-        self.net.set_activation_function_output(fann.GAUSSIAN)
+        self.net.set_activation_function_hidden(fann.SIGMOID_SYMMETRIC_STEPWISE)
+        self.net.set_activation_function_output(fann.SIGMOID_STEPWISE)
         self.net.set_train_stop_function(fann.STOPFUNC_BIT)
         self.net.set_bit_fail_limit(0.1)
 
@@ -76,8 +77,8 @@ class EntityEdge(object):
         self.net.create_from_file(str(prefix + '.net'))  # Must have str()
         self.ids.load(prefix)
 
-    def train(self, name, train_data):
-        for sent in train_data.my_sents(name):
+    def train(self, train_data):
+        for sent in train_data.my_sents(self.intent_name):
             if self.token in sent:
                 for i in range(sent.index(self.token) + self.dir,
                                self.get_end(sent), self.dir):
@@ -86,18 +87,35 @@ class EntityEdge(object):
 
         inputs, outputs = [], []
 
+        def pollute(sent, i, out_val):
+            """Simulates multiple token words in adjacent entities"""
+            for j, check_token in enumerate(sent):
+                d = j - i
+                if int(d > 0) - int(d < 0) == self.dir and check_token.startswith('{'):
+                    for pol_len in range(1, 4):
+                        s = sent[:j] + [':0'] * pol_len + sent[j + 1:]
+                        p = i + (pol_len - 1) * int(self.dir < 0)
+                        inputs.append(self.vectorize(s, p))
+                        outputs.append([out_val])
+
         def add_sents(sents, out_fn):
             for sent in sents:
-                for i, token in enumerate(list(sent)):
+                for i, token in enumerate(sent):
+                    out_val = out_fn(token)
                     inputs.append(self.vectorize(sent, i))
-                    outputs.append([out_fn(token)])
+                    outputs.append([out_val])
+                    if out_val == 1.0:
+                        pollute(sent, i, 1.0)
 
-        add_sents(train_data.my_sents(name), lambda x: float(x == self.token))
-        add_sents(train_data.other_sents(name), lambda x: 0.0)
+        add_sents(train_data.my_sents(self.intent_name), lambda x: float(x == self.token))
+        add_sents(train_data.other_sents(self.intent_name), lambda x: 0.0)
         inputs, outputs = resolve_conflicts(inputs, outputs)
 
         data = fann.training_data()
         data.set_train_data(inputs, outputs)
 
-        self.configure_net()
-        self.net.train_on_data(data, 10000, 0, 0)
+        for _ in range(10):
+            self.configure_net()
+            self.net.train_on_data(data, 1000, 0, 0)
+            if self.net.get_bit_fail() == 0:
+                break

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fann2.libfann import neural_net, training_data as fann_data, GAUSSIAN, STOPFUNC_BIT
+from fann2 import libfann as fann
 
 from padatious.id_manager import IdManager
 from padatious.util import resolve_conflicts, StrEnum
@@ -24,15 +24,15 @@ class Ids(StrEnum):
 
 class SimpleIntent(object):
     """General intent used to match sentences or phrases"""
-    NUM_HID = 2
     LENIENCE = 0.6
 
-    def __init__(self):
+    def __init__(self, name=''):
+        self.name = name
         self.ids = IdManager(Ids)
         self.net = None
 
     def match(self, sent):
-        return self.net.run(self.vectorize(sent))[0]
+        return max(0, self.net.run(self.vectorize(sent))[0])
 
     def vectorize(self, sent):
         vector = self.ids.vector()
@@ -47,17 +47,15 @@ class SimpleIntent(object):
         return vector
 
     def configure_net(self):
-        layers = [len(self.ids)] + [len(self.ids) // 2] * self.NUM_HID + [1]
-
-        self.net = neural_net()
-        self.net.create_standard_array(layers)
-        self.net.set_activation_function_hidden(GAUSSIAN)
-        self.net.set_activation_function_output(GAUSSIAN)
-        self.net.set_train_stop_function(STOPFUNC_BIT)
+        self.net = fann.neural_net()
+        self.net.create_standard_array([len(self.ids), 10, 1])
+        self.net.set_activation_function_hidden(fann.SIGMOID_SYMMETRIC_STEPWISE)
+        self.net.set_activation_function_output(fann.SIGMOID_SYMMETRIC_STEPWISE)
+        self.net.set_train_stop_function(fann.STOPFUNC_BIT)
         self.net.set_bit_fail_limit(0.1)
 
-    def train(self, name, train_data):
-        for sent in train_data.my_sents(name):
+    def train(self, train_data):
+        for sent in train_data.my_sents(self.name):
             self.ids.add_sent(sent)
 
         inputs = []
@@ -81,31 +79,37 @@ class SimpleIntent(object):
             for word in sent:
                 add([word], calc_weight(word) / total_weight)
 
-        for sent in train_data.my_sents(name):
+        for sent in train_data.my_sents(self.name):
             add(sent, 1.0)
             pollute(sent, 0)
             pollute(sent, len(sent))
             weight(sent)
 
-        for sent in train_data.other_sents(name):
+        for sent in train_data.other_sents(self.name):
             add(sent, 0.0)
         add([], 0.0)
 
         inputs, outputs = resolve_conflicts(inputs, outputs)
 
-        train_data = fann_data()
+        train_data = fann.training_data()
         train_data.set_train_data(inputs, outputs)
 
-        self.configure_net()
-        self.net.train_on_data(train_data, 10000, 0, 0)
+        for _ in range(10):
+            self.configure_net()
+            self.net.train_on_data(train_data, 1000, 0, 0)
+            if self.net.get_bit_fail() == 0:
+                break
 
     def save(self, prefix):
         prefix += '.intent'
         self.net.save(str(prefix + '.net'))  # Must have str()
         self.ids.save(prefix)
 
-    def load(self, prefix):
+    @classmethod
+    def from_file(cls, name, prefix):
         prefix += '.intent'
-        self.net = neural_net()
+        self = cls(name)
+        self.net = fann.neural_net()
         self.net.create_from_file(str(prefix + '.net'))  # Must have str()
         self.ids.load(prefix)
+        return self

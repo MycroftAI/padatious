@@ -52,8 +52,8 @@ class TestIntent:
         self.i_hi.save('temp')
         self.i_bye.save('temp')
 
-        self.i_hi = Intent.from_disk('hi', 'temp')
-        self.i_bye = Intent.from_disk('bye', 'temp')
+        self.i_hi = Intent.from_file('hi', 'temp')
+        self.i_bye = Intent.from_file('bye', 'temp')
 
         self.test_match()
 

@@ -22,24 +22,24 @@ from padatious.id_manager import IdManager
 class TestIdManager:
     def test_add(self):
         ids = IdManager()
-        assert '1' not in ids
-        ids.add_token('1')
-        assert '1' in ids
-        ids.add_token('1')
+        assert 'a' not in ids
+        ids.add_token('a')
+        assert 'a' in ids
+        ids.add_token('a')
         assert len(ids) == 1
-        ids.add_sent(['2', '3'])
+        ids.add_sent(['b', 'c'])
         assert len(ids) == 3
-        for i in ['2', '3']:
+        for i in ['b', 'c']:
             assert i in ids
 
     def test_vector(self):
         ids = IdManager()
         assert len(ids.vector()) == 0
-        ids.add_token('1')
+        ids.add_token('a')
         assert len(ids.vector()) == 1
-        ids.add_token('2')
+        ids.add_token('b')
         vec = ids.vector()
-        ids.assign(vec, '2', 0.5)
+        ids.assign(vec, 'b', 0.5)
         assert vec == [0, 0.5]
 
     def test_assign(self):

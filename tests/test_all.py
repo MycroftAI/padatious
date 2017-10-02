@@ -108,6 +108,33 @@ class TestAll:
         data = self.cont.calc_intent('wiki')
         assert data.conf < 0.5
 
+    def test_entity_recognition(self):
+        self.cont.add_intent('weather', [
+            'weather for {place} {time}'
+        ], True)
+        self.cont.add_intent('time', [
+            'what time is it',
+            'whats the time right now',
+            'what time is it at the moment',
+            'currently, what time is it'
+        ], True)
+        self.cont.add_entity('{place}', [
+            'los angeles',
+            'california',
+            'new york',
+            'chicago'
+        ])
+        self.cont.add_entity('{time}', [
+            'right now',
+            'currently',
+            'at the moment',
+        ])
+        self.cont.train(False)
+        data = self.cont.calc_intent('weather for los angeles right now')
+        assert data.name == 'weather'
+        assert data.matches == {'place': 'los angeles', 'time': 'right now'}
+        assert data.conf > 0.5
+
     def teardown(self):
         if isdir('temp'):
-            rmtree('temp')
+            pass#rmtree('temp')

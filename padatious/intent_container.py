@@ -12,22 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import multiprocessing as mp
-from os import mkdir
-from os.path import join, isfile, isdir, splitext
-
-import padatious
-from padatious.intent import Intent
-from padatious.train_data import TrainData
-from padatious.util import lines_hash, tokenize
-
-
-def _train_and_save(intent, cache, data, print_updates):
-    """Internal pickleable function used to train intents in another process"""
-    intent.train(data)
-    if print_updates:
-        print('Regenerated ' + intent.name + '.')
-    intent.save(cache)
+from padatious.entity import Entity
+from padatious.entity_manager import EntityManager
+from padatious.intent_manager import IntentManager
 
 
 class IntentContainer(object):
@@ -38,11 +25,10 @@ class IntentContainer(object):
         cache_dir (str): Place to put all saved neural networks
     """
     def __init__(self, cache_dir):
-        self.cache = cache_dir
-        self.intents = []
-        self.train_data = TrainData()
+        self.intents = IntentManager(cache_dir)
+        self.entities = EntityManager(cache_dir)
 
-    def add_intent(self, name, lines, reload_cache=False):
+    def add_intent(self, *args, **kwargs):
         """
         Creates a new intent, optionally checking the cache first
 
@@ -51,32 +37,52 @@ class IntentContainer(object):
             lines (list<str>): All the sentences that should activate the intent
             reload_cache: Whether to ignore cached intent if exists
         """
-        hash_fn = join(self.cache, name + '.hash')
-        old_hsh = None
-        if isfile(hash_fn):
-            with open(hash_fn, 'rb') as g:
-                old_hsh = g.read()
-        min_ver = splitext(padatious.__version__)[0]
-        new_hsh = lines_hash([min_ver] + lines)
-        if reload_cache or old_hsh != new_hsh:
-            self.intents.append(Intent(name, new_hsh))
-        else:
-            self.intents.append(Intent.from_disk(name, self.cache))
-        self.train_data.add_lines(name, lines)
+        self.intents.add(*args, **kwargs)
 
-    def load_file(self, name, file_name, reload_cache=False):
+    def add_entity(self, token, *args, **kwargs):
+        """
+        Adds an entity that matches the given lines.
+
+        Example:
+            self.add_intent('weather', ['will it rain on {weekday}?'])
+            self.add_entity('{weekday}', ['monday', 'tuesday', 'wednesday'])  # ...
+
+        Args:
+            token (str): The token of the entity
+            lines (list<str>): Lines of example extracted entities
+            reload_cache (bool): Whether to refresh all of cache
+        """
+        Entity.verify_token(token)
+        self.entities.add(token, *args, **kwargs)
+
+    def load_entity(self, token, *args, **kwargs):
+        """
+       Loads an entity, optionally checking the cache first
+
+       Args:
+           name (str): The associated name of the entity
+           file_name (str): The location of the entity file
+           reload_cache (bool): Whether to refresh all of cache
+       """
+        Entity.verify_token(token)
+        self.entities.load(token, *args, **kwargs)
+
+    def load_file(self, *args, **kwargs):
+        """Legacy. Use load_intent instead"""
+        self.load_intent(*args, **kwargs)
+
+    def load_intent(self, *args, **kwargs):
         """
         Loads an intent, optionally checking the cache first
 
         Args:
             name (str): The associated name of the intent
             file_name (str): The location of the intent file
-            reload_cache (bool): Whether to ignore cached intent if exists
+            reload_cache (bool): Whether to refresh all of cache
         """
-        with open(file_name, 'r') as f:
-            self.add_intent(name, f.readlines(), reload_cache)
+        self.intents.load(*args, **kwargs)
 
-    def train(self, print_updates=True, single_thread=False):
+    def train(self, *args, **kwargs):
         """
         Trains all the loaded intents that need to be updated
         If a cache file exists with the same hash as the intent file,
@@ -87,33 +93,9 @@ class IntentContainer(object):
                 each time a new intent is trained
             single_thread (bool): Whether to force running in a single thread
         """
-        if not isdir(self.cache):
-            mkdir(self.cache)
-
-        def args(i):
-            return i, self.cache, self.train_data, print_updates
-
-        if single_thread:
-            for i in self.intents:
-                _train_and_save(*args(i))
-        else:
-            # Train in multiple processes to disk
-            pool = mp.Pool()
-            try:
-                results = [
-                    pool.apply_async(_train_and_save, args(i))
-                    for i in self.intents if not i.is_loaded
-                ]
-
-                for i in results:
-                    i.get()
-            finally:
-                pool.close()
-
-        # Load saved intents from disk
-        for i, intent in enumerate(self.intents):
-            if not intent.is_loaded:
-                self.intents[i] = Intent.from_disk(intent.name, self.cache)
+        self.intents.train(*args, **kwargs)
+        self.entities.train(*args, **kwargs)
+        self.entities.calc_ent_dict()
 
     def calc_intents(self, query):
         """
@@ -126,13 +108,7 @@ class IntentContainer(object):
             list<MatchData>: List of intent matches
         See calc_intent() for a description of the returned MatchData
         """
-        sent = tokenize(query)
-        matches = []
-        for i in self.intents:
-            match = i.match(sent)
-            match.detokenize()
-            matches.append(match)
-        return matches
+        return self.intents.calc_intents(query, self.entities)
 
     def calc_intent(self, query):
         """
@@ -144,5 +120,4 @@ class IntentContainer(object):
         Returns:
             MatchData: Best intent match
         """
-        matches = self.calc_intents(query)
-        return max(matches, key=lambda x: x.conf)
+        return self.intents.calc_intent(query, self.entities)

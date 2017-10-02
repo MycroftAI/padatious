@@ -13,10 +13,17 @@ container = IntentContainer('intent_cache')
 for file_name in glob('data/*.intent'):
     name = basename(file_name).replace('.intent', '')
     container.load_file(name, file_name, reload_cache=reload_cache)
+
+for file_name in glob('data/*.entity'):
+    name = basename(file_name).replace('.entity', '')
+    container.load_entity(name, file_name, reload_cache=reload_cache)
+
 container.train()
 
-while True:
-    data = max(container.calc_intents(input('> ')), key=lambda x: x.conf)
+query = None
+while query != 'q':
+    query = input('> ')
+    data = container.calc_intent(query)
     print(data.name + ': ' + str(data.conf))
     for key, val in data.matches.items():
         print('\t' + key + ': ' + val)
