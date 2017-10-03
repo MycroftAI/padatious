@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from xxhash import xxh32
-import numpy as np
 
 
 def lines_hash(lines):
@@ -155,7 +154,10 @@ def resolve_conflicts(inputs, outputs):
     inputs, outputs = [], []
     for inp, outs in data.items():
         inputs.append(list(inp))
-        outputs.append(np.maximum.reduce(outs))
+        combined = [0] * len(outs[0])
+        for i in range(len(combined)):
+            combined[i] = max(j[i] for j in outs)
+        outputs.append(combined)
     return inputs, outputs
 
 
