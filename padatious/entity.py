@@ -24,9 +24,9 @@ class Entity(SimpleIntent, Trainable):
         Trainable.__init__(self, name, *args, **kwargs)
 
     @staticmethod
-    def verify_token(token):
-        if token[0] + token[-1] != '{}':
-            raise ValueError('token must be surrounded in braces (ex. {word})')
+    def verify_name(token):
+        if token[0] in '{}' or token[-1] in '{}':
+            raise ValueError('token must not be surrounded in braces (ie. {word} should be word)')
 
     def save(self, folder):
         prefix = join(folder, self.name)

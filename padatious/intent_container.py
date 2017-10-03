@@ -39,7 +39,7 @@ class IntentContainer(object):
         """
         self.intents.add(*args, **kwargs)
 
-    def add_entity(self, token, *args, **kwargs):
+    def add_entity(self, name, *args, **kwargs):
         """
         Adds an entity that matches the given lines.
 
@@ -48,14 +48,14 @@ class IntentContainer(object):
             self.add_entity('{weekday}', ['monday', 'tuesday', 'wednesday'])  # ...
 
         Args:
-            token (str): The token of the entity
+            name (str): The name of the entity
             lines (list<str>): Lines of example extracted entities
             reload_cache (bool): Whether to refresh all of cache
         """
-        Entity.verify_token(token)
-        self.entities.add(token, *args, **kwargs)
+        Entity.verify_name(name)
+        self.entities.add('{' + name + '}', *args, **kwargs)
 
-    def load_entity(self, token, *args, **kwargs):
+    def load_entity(self, name, *args, **kwargs):
         """
        Loads an entity, optionally checking the cache first
 
@@ -64,8 +64,8 @@ class IntentContainer(object):
            file_name (str): The location of the entity file
            reload_cache (bool): Whether to refresh all of cache
        """
-        Entity.verify_token(token)
-        self.entities.load(token, *args, **kwargs)
+        Entity.verify_name(name)
+        self.entities.load('{' + name + '}', *args, **kwargs)
 
     def load_file(self, *args, **kwargs):
         """Legacy. Use load_intent instead"""
