@@ -65,6 +65,18 @@ class TestAll:
         assert data.conf > 0.5
         assert data.matches == {'island': 'tahiti'}
 
+    def test_single_extraction_front_back(self):
+        self.cont.add_intent('start.timer', [
+            'Timer {duration}',
+            '{duration} timer',
+        ])
+        self.cont.train(False)
+
+        data = self.cont.calc_intent('10 minute timer')
+        assert data.name == 'start.timer'
+        assert data.conf > 0.5
+        assert data.matches == {'duration' : '10 minute'}
+
     def test_multi_extraction_easy(self):
         self.cont.add_intent('search', [
             '(search for|find) {query}',
@@ -83,9 +95,9 @@ class TestAll:
         assert data.matches == {'query': 'funny dog videos'}
         assert data.conf > 0.5
 
-        data = self.cont.calc_intent('search for bananas using random food search')
+        data = self.cont.calc_intent('search for bananas using foodio')
         assert data.name == 'search'
-        assert data.matches == {'query': 'bananas', 'engine': 'random food search'}
+        assert data.matches == {'query': 'bananas', 'engine': 'foodio'}
         assert data.conf > 0.5
 
         data = self.cont.calc_intent('search for big furry cats using the best search engine')
