@@ -77,7 +77,8 @@ class SimpleIntent(object):
             for word in sent:
                 total_weight += calc_weight(word)
             for word in sent:
-                add([word], calc_weight(word) / total_weight)
+                weight = 0 if word.startswith('{') else calc_weight(word)
+                add([word], weight / total_weight)
 
         for sent in train_data.my_sents(self.name):
             add(sent, 1.0)
@@ -97,6 +98,7 @@ class SimpleIntent(object):
         for _ in range(10):
             self.configure_net()
             self.net.train_on_data(train_data, 1000, 0, 0)
+            self.net.test_data(train_data)
             if self.net.get_bit_fail() == 0:
                 break
 

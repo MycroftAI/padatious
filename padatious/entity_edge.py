@@ -117,5 +117,6 @@ class EntityEdge(object):
         for _ in range(10):
             self.configure_net()
             self.net.train_on_data(data, 1000, 0, 0)
+            self.net.test_data(data)
             if self.net.get_bit_fail() == 0:
                 break
