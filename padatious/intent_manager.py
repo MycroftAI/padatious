@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from padatious.intent import Intent
+from padatious.match_data import MatchData
 from padatious.training_manager import TrainingManager
 from padatious.util import tokenize
 
@@ -32,4 +33,6 @@ class IntentManager(TrainingManager):
 
     def calc_intent(self, query, entity_manager):
         matches = self.calc_intents(query, entity_manager)
+        if len(matches) == 0:
+            return MatchData('', '')
         return max(matches, key=lambda x: x.conf)

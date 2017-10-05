@@ -63,6 +63,10 @@ class TestIntentContainer:
         assert (intents[0].conf > intents[1].conf) == (intents[0].name == 'test')
         assert self.cont.calc_intent('this is another test').name == 'test'
 
+    def test_empty(self):
+        self.cont.train(False)
+        self.cont.calc_intent('hello')
+
     def teardown(self):
         if isdir('temp'):
             rmtree('temp')
