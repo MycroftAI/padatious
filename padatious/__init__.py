@@ -15,4 +15,4 @@
 from .intent_container import IntentContainer
 from .match_data import MatchData
 
-__version__ = '0.3.2'  # Also change in setup.py
+__version__ = '0.3.3'  # Also change in setup.py
