@@ -30,6 +30,15 @@ class MatchData(object):
         self.matches = matches or {}
         self.conf = conf
 
+    def __getitem__(self, item):
+        return self.matches.__getitem__(item)
+
+    def __contains__(self, item):
+        return self.matches.__contains__(item)
+
+    def get(self, key, default=None):
+        return self.matches.get(key, default)
+
     def __repr__(self):
         return repr(self.__dict__)
 
