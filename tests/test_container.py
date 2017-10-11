@@ -67,6 +67,29 @@ class TestIntentContainer:
         self.cont.train(False)
         self.cont.calc_intent('hello')
 
+    def _test_entities(self, namespace):
+        self.cont.add_intent(namespace + 'intent', [
+            'test {ent}'
+        ])
+        self.cont.add_entity(namespace + 'ent', [
+            'one'
+        ])
+        self.cont.train(False)
+        data = self.cont.calc_intent('test one')
+        high_conf = data.conf
+        assert data.conf > 0.5
+        assert data['ent'] == 'one'
+
+        data = self.cont.calc_intent('test two')
+        assert high_conf > data.conf
+        assert 'ent' not in data
+
+    def test_regular_entities(self):
+        self._test_entities('')
+
+    def test_namespaced_entities(self):
+        self._test_entities('SkillName:')
+
     def teardown(self):
         if isdir('temp'):
             rmtree('temp')
