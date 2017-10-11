@@ -28,6 +28,15 @@ class Entity(SimpleIntent, Trainable):
         if token[0] in '{}' or token[-1] in '{}':
             raise ValueError('token must not be surrounded in braces (ie. {word} should be word)')
 
+    @staticmethod
+    def wrap_name(name):
+        """Wraps SkillName:entity into SkillName:{entity}"""
+        if ':' in name:
+            intent_name, *ent_name = name.split(':')
+            return intent_name + ':{' + ':'.join(ent_name) + '}'
+        else:
+            return '{' + name + '}'
+
     def save(self, folder):
         prefix = join(folder, self.name)
         SimpleIntent.save(self, prefix)

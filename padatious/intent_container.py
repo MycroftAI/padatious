@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from padatious.entity import Entity
 from padatious.entity_manager import EntityManager
 from padatious.intent_manager import IntentManager
@@ -53,7 +52,7 @@ class IntentContainer(object):
             reload_cache (bool): Whether to refresh all of cache
         """
         Entity.verify_name(name)
-        self.entities.add('{' + name + '}', *args, **kwargs)
+        self.entities.add(Entity.wrap_name(name), *args, **kwargs)
 
     def load_entity(self, name, *args, **kwargs):
         """
@@ -65,8 +64,7 @@ class IntentContainer(object):
            reload_cache (bool): Whether to refresh all of cache
        """
         Entity.verify_name(name)
-        intent_name, ent_name = name.split(':')
-        self.entities.load(intent_name + ':{' + ent_name + '}', *args, **kwargs)
+        self.entities.load(Entity.wrap_name(name), *args, **kwargs)
 
     def load_file(self, *args, **kwargs):
         """Legacy. Use load_intent instead"""
