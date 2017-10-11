@@ -65,7 +65,8 @@ class IntentContainer(object):
            reload_cache (bool): Whether to refresh all of cache
        """
         Entity.verify_name(name)
-        self.entities.load('{' + name + '}', *args, **kwargs)
+        intent_name, ent_name = name.split(':')
+        self.entities.load(intent_name + ':{' + ent_name + '}', *args, **kwargs)
 
     def load_file(self, *args, **kwargs):
         """Legacy. Use load_intent instead"""
