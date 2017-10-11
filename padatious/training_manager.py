@@ -61,7 +61,7 @@ class TrainingManager(object):
 
     def load(self, name, file_name, reload_cache=False):
         with open(file_name) as f:
-            self.add(name, f.readlines(), reload_cache)
+            self.add(name, f.read().split('\n'), reload_cache)
 
     def train(self, debug=True, single_thread=False):
         if not isdir(self.cache):
@@ -90,3 +90,4 @@ class TrainingManager(object):
         # Load saved objects from disk
         for obj in self.objects_to_train:
             self.objects.append(self.cls.from_file(name=obj.name, folder=self.cache))
+        self.objects_to_train = []
