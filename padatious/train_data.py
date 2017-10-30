@@ -27,6 +27,7 @@ class TrainData(object):
     def add_lines(self, name, lines):
         self.sent_lists[name] = sum([expand_parentheses(tokenize(line))
                                      for line in lines if not line.isspace()], [])
+        self.sent_lists[name] = [i for i in self.sent_lists[name] if i]
 
     def add_file(self, name, file_name):
         with open(file_name, 'r') as f:
