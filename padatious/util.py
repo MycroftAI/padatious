@@ -133,6 +133,10 @@ def expand_parentheses(sent):
         return sents
 
 
+def remove_comments(lines):
+    return [i for i in lines if not i.startswith('//')]
+
+
 def resolve_conflicts(inputs, outputs):
     """
     Checks for duplicate inputs and if there are any,

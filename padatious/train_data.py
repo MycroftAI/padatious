@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from padatious.util import tokenize, expand_parentheses
+from padatious.util import tokenize, expand_parentheses, remove_comments
 
 
 class TrainData(object):
@@ -25,8 +25,8 @@ class TrainData(object):
         self.sent_lists = {}
 
     def add_lines(self, name, lines):
-        self.sent_lists[name] = sum([expand_parentheses(tokenize(line))
-                                     for line in lines if not line.isspace()], [])
+        lines = remove_comments(lines)
+        self.sent_lists[name] = sum([expand_parentheses(tokenize(line)) for line in lines], [])
         self.sent_lists[name] = [i for i in self.sent_lists[name] if i]
 
     def add_file(self, name, file_name):
