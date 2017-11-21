@@ -8,7 +8,7 @@ An efficient and agile neural network intent parser
  - Requires a relatively small amount of data
  - Intents run independent of each other
  - Easily extract entities (ie. Find the nearest *gas station* -> `place: gas station`)
- - Fast training
+ - Fast training with a modular approach to neural networks
 
 ### API Example ###
 
@@ -16,27 +16,16 @@ Here's a simple example of how to use Padatious:
 
 **program.py**:
 ```Python
-from padatious.intent_container import IntentContainer
+from padatious import IntentContainer
 
 container = IntentContainer('intent_cache')
-container.load_file('hello', 'hello.intent')
-container.load_file('goodbye', 'goodbye.intent')
+container.add_intent('hello', ['Hi there!', 'Hello.'])
+container.add_intent('goodbye', ['See you!', 'Goodbye!'])
+container.add_intent('search', ['Search for {query} (using|on) {engine}.'])
 container.train()
 
-data = container.calc_intent('Hello there!')
-print(data.name)
-```
-
-**hello.intent**:
-```
-Hi there!
-Hello.
-```
-
-**goodbye.intent**:
-```
-See you!
-Goodbye!
+print(container.calc_intent('Hello there!'))
+print(container.calc_intent('Search for cats on CatTube.'))
 ```
 
 Run with:
