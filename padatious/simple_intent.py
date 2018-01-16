@@ -20,6 +20,10 @@ from padatious.util import resolve_conflicts, StrEnum
 
 class Ids(StrEnum):
     unknown_tokens = ':0'
+    w_1 = ':1'
+    w_2 = ':2'
+    w_3 = ':3'
+    w_4 = ':4'
 
 
 class SimpleIntent(object):
@@ -44,6 +48,10 @@ class SimpleIntent(object):
                 unknown += 1
         if len(sent) > 0:
             self.ids.assign(vector, Ids.unknown_tokens, unknown / float(len(sent)))
+            self.ids.assign(vector, Ids.w_1, len(sent) / 1)
+            self.ids.assign(vector, Ids.w_2, len(sent) / 2.)
+            self.ids.assign(vector, Ids.w_3, len(sent) / 3.)
+            self.ids.assign(vector, Ids.w_4, len(sent) / 4.)
         return vector
 
     def configure_net(self):
@@ -82,9 +90,11 @@ class SimpleIntent(object):
 
         for sent in train_data.my_sents(self.name):
             add(sent, 1.0)
-            pollute(sent, 0)
-            pollute(sent, len(sent))
             weight(sent)
+            if not any(word[0] == ':' for word in sent):
+                pollute(sent, 0)
+                pollute(sent, len(sent))
+
 
         for sent in train_data.other_sents(self.name):
             add(sent, 0.0)
