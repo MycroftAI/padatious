@@ -7,7 +7,7 @@ with open(join(dirname(abspath(__file__)), 'requirements.txt')) as f:
 
 setup(
     name='padatious',
-    version='0.3.8',  # Also change in padatious/__init__.py
+    version='0.4.0',  # Also change in padatious/__init__.py
     description='A neural network intent parser',
     url='http://github.com/MycroftAI/padatious',
     author='Matthew Scholefield',
