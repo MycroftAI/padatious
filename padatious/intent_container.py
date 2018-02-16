@@ -81,6 +81,14 @@ class IntentContainer(object):
         """
         self.intents.load(*args, **kwargs)
 
+    def remove_intent(self, name):
+        """Unload an intent"""
+        self.intents.remove(name)
+
+    def remove_entity(self, name):
+        """Unload an entity"""
+        self.entities.remove(name)
+
     def train(self, *args, **kwargs):
         """
         Trains all the loaded intents that need to be updated

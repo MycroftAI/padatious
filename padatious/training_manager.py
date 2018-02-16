@@ -63,6 +63,11 @@ class TrainingManager(object):
         with open(file_name) as f:
             self.add(name, f.read().split('\n'), reload_cache)
 
+    def remove(self, name):
+        self.objects = [i for i in self.objects if i.name != name]
+        self.objects_to_train = [i for i in self.objects_to_train if i.name != name]
+        self.train_data.remove_lines(name)
+
     def train(self, debug=True, single_thread=False):
         if not isdir(self.cache):
             mkdir(self.cache)

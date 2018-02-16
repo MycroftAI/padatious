@@ -30,3 +30,9 @@ class EntityManager(TrainingManager):
         if ':' in intent_name:
             local_name = intent_name.split(':')[0] + ':' + token
         return self.entity_dict.get(local_name, self.entity_dict.get(global_name))
+
+    def remove(self, name):
+        name = '{' + name + '}'
+        if name in self.entity_dict:
+            del self.entity_dict[name]
+        super(EntityManager, self).remove(name)

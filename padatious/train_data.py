@@ -29,6 +29,10 @@ class TrainData(object):
         self.sent_lists[name] = sum([expand_parentheses(tokenize(line)) for line in lines], [])
         self.sent_lists[name] = [i for i in self.sent_lists[name] if i]
 
+    def remove_lines(self, name):
+        if name in self.sent_lists:
+            del self.sent_lists[name]
+
     def add_file(self, name, file_name):
         with open(file_name, 'r') as f:
             self.add_lines(name, f.readlines())
