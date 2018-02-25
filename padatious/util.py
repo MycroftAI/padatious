@@ -91,6 +91,7 @@ def expand_parentheses(sent):
     """
     return SentenceTreeParser(sent).expand_parentheses()
 
+
 def remove_comments(lines):
     return [i for i in lines if not i.startswith('//')]
 
@@ -127,4 +128,5 @@ class StrEnum(object):
     """Enum with strings as keys. Implements items method"""
     @classmethod
     def values(cls):
-        return [getattr(cls, i) for i in dir(cls) if not i.startswith("__") and i != 'values']
+        return [getattr(cls, i) for i in dir(cls)
+                if not i.startswith("__") and i != 'values']
