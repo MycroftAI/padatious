@@ -30,7 +30,10 @@ def test_tokenize():
 def test_expand_parentheses():
     def xp(s): return {''.join(sent) for sent in expand_parentheses(tokenize(s))}
     assert xp('1 (2|3) 4 (5|6) 7') == {'12457', '12467', '13457', '13467'}
-    assert xp('1 (2 3) 4') == {'1(23)4'}
+    assert xp('1 (2 3) 4') == {'1234'}
+    assert xp('1 (2 3|) 4') == {'1234', '14'}
+    assert xp('1 (|2 3) 4') == {'1234', '14'}
+    assert xp('1 ((2|4) (3|)) 4') == {'1234', '124', '1434', '144'}
 
 
 def test_resolve_conflicts():

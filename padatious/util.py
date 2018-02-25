@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from xxhash import xxh32
+from bracket_expansion import SentenceTreeParser
 
 
 def lines_hash(lines):
@@ -88,76 +89,7 @@ def expand_parentheses(sent):
     Returns:
         list<list<str>>: Multiple possible sentences from original
     """
-    if '(' not in sent or '|' not in sent:
-        return [sent]
-    else:
-        expanded = [[]]
-        # iterate through the tokenized sentence
-        i = 0
-        while i < len(sent):
-            # if there is no parentheses, just append the token 
-            # to every subsentence
-            if sent[i] != '(':
-                for s in expanded:
-                    s.add(sent[i])
-            # else combine it with every expanded sub sentence
-            else:
-                # find the end of this sub sentence
-                start = i + 1;
-                end = start + 1;
-                for j in range(start, len(sent)):
-                    if sent[j] == ')':
-                        end = j
-                # expand the subsequence
-                expanded_part = expand_parentheses(sent[start:end])
-                # combine this subsequence with every possible
-                # expanded sequence
-                for s in expanded:
-                    for e in expanded_part:
-                        s.extend(e)
-                
-class SentenceTreeParser(object):
-    
-    def __init__(self, tokens):
-        self.tokens = tokens
-    
-    def generate_tree(self):
-        """
-        Generate sentence token trees 
-        ['1', '(', '2', '|', '3, ')'] -> ['1', ['2', '3']]
-        """
-        self._current_position = 0
-        return self._parse()
-    
-    def _parse(self):
-        """
-        Generate sentence token trees from the current position to
-        the next closing parentheses / end of the list and return it
-        ['1', '(', '2', '|', '3, ')'] -> ['1', ['2', '3']]
-        ['2', '|', '3'] -> ['2', '3']
-        """
-        sentence_list = []
-        cur_sentence = []
-        sentence_list.add(cur_sentence)
-        while self._current_position < len(self.tokens):
-            cur = self.tokens[i]
-            if cur == '|':
-                # begin a new sentence
-                cur_sentence = []
-                sentence_list.add(cur_sentence)
-                self._current_position += 1
-            elif cur == ')':
-                # end the parsing
-                break
-            elif cur == '(':
-                self._current_position += 1
-                # append the parsed subsequences
-                cur_sentence.add(_parse())
-            else:
-                cur_sentence.add(cur)
-                self._current_position += 1
-        self._current_position += 1
-        return sentence_list       
+    return SentenceTreeParser(sent).expand_parentheses()
 
 def remove_comments(lines):
     return [i for i in lines if not i.startswith('//')]

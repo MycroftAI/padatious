@@ -1,0 +1,2 @@
+<expr> ::= <expr>* | '(' <expr> ')' | <expr> '|' <expr> | <word> | '{' <word> '}'
+<word> ::= ('a'| ... |'$')<word>
