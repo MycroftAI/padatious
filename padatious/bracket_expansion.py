@@ -17,15 +17,27 @@ class Fragment(object):
     """(Abstract) empty sentence fragment"""
 
     def __init__(self, tree):
+        """
+        Construct a sentence tree fragment which is merely a wrapper for
+        a list of Strings
+        
+        Args:
+            tree (?): Base tree for the sentence fragment, type depends on 
+                        subclass, refer to those subclasses
+        """
         self._tree = tree
 
     def tree(self):
-        """Return the represented sentence tree as raw list."""
+        """Return the represented sentence tree as raw data."""
         return self._tree
 
     def expand(self):
-        """Expanded version of the fragment."""
-        # Creates one empty sentence
+        """
+        Expanded version of the fragment. In this case an empty sentence.
+        
+        Returns:
+            List<List<str>>: A list with an empty sentence (= token/string list)
+        """
         return [[]]
 
     def __str__(self):
@@ -36,18 +48,38 @@ class Fragment(object):
 
 
 class Word(Fragment):
-    """Single word in the sentence tree."""
+    """
+    Single word in the sentence tree.
+    
+    Construct with a string as argument.
+    """
 
     def expand(self):
-        """Creates one sentence that contains exactly that word."""
+        """
+        Creates one sentence that contains exactly that word.
+        
+        Returns:
+            List<List<str>>: A list with the given string as sentence 
+                                (= token/string list)
+        """
         return [[self._tree]]
 
 
 class Sentence(Fragment):
-    """A Sentence made of several concatenations/words."""
+    """
+    A Sentence made of several concatenations/words.
+    
+    Construct with a List<Fragment> as argument.
+    """
 
     def expand(self):
-        """Creates a combination of all sub-sentences."""
+        """
+        Creates a combination of all sub-sentences.
+        
+        Returns:
+            List<List<str>>: A list with all subsentence expansions combined in
+                                every possible way
+        """
         old_expanded = [[]]
         for sub in self._tree:
             sub_expanded = sub.expand()
@@ -61,10 +93,20 @@ class Sentence(Fragment):
 
 
 class Options(Fragment):
-    """A Combination of possible sub-sentences."""
+    """
+    A Combination of possible sub-sentences.
+    
+    Construct with List<Fragment> as argument.
+    """
 
     def expand(self):
-        """Returns all of its options as seperated sub-sentences."""
+        """
+        Returns all of its options as seperated sub-sentences.
+        
+        Returns:
+            List<List<str>>: A list containing the sentences created by all
+                                expansions of its sub-sentences
+        """
         options = []
         for option in self._tree:
             options.extend(option.expand())
