@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from xxhash import xxh32
-from bracket_expansion import SentenceTreeParser
+from padatious.bracket_expansion import SentenceTreeParser
 
 
 def lines_hash(lines):

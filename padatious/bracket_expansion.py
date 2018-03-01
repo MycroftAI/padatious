@@ -35,7 +35,7 @@ class Word(Fragment):
     """Single word in the sentence tree."""
 
     def expand(self):
-        # Creates one sentence that contains exactly that word
+        """Creates one sentence that contains exactly that word."""
         return [[self._tree]]
 
 
@@ -43,7 +43,7 @@ class Sentence(Fragment):
     """A Sentence made of several concatenations/words."""
 
     def expand(self):
-        # Creates a combination of all sub-sentences
+        """Creates a combination of all sub-sentences."""
         old_expanded = [[]]
         for sub in self._tree:
             sub_expanded = sub.expand()
@@ -60,7 +60,7 @@ class Options(Fragment):
     """A Combination of possible sub-sentences."""
 
     def expand(self):
-        # Returns all of its options as seperated sub-sentences
+        """Returns all of its options as seperated sub-sentences."""
         options = []
         for option in self._tree:
             options.extend(option.expand())
