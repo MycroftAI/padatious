@@ -19,6 +19,10 @@ class Fragment(object):
     def __init__(self, tree):
         self._tree = tree
 
+    def tree(self):
+        """Return the represented sentence tree as raw list."""
+        return self._tree
+
     def expand(self):
         """Expanded version of the fragment."""
         # Creates one empty sentence
@@ -103,8 +107,16 @@ class SentenceTreeParser(object):
             if cur == '(':
                 # Parse the subexpression
                 subexpr = self._parse_expr()
+                # Check if the subexpression only has one branch
+                # -> If so, append "(" and ")" and add it as is
+                normal_brackets = False
+                if len(subexpr.tree()) == 1:
+                    normal_brackets = True
+                    cur_sentence.append(Word('('))
                 # add it to the sentence
                 cur_sentence.append(subexpr)
+                if normal_brackets:
+                    cur_sentence.append(Word(')'))
             elif cur == '|':
                 # Begin parsing a new sentence
                 cur_sentence = []
