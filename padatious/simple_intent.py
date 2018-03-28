@@ -95,7 +95,6 @@ class SimpleIntent(object):
                 pollute(sent, 0)
                 pollute(sent, len(sent))
 
-
         for sent in train_data.other_sents(self.name):
             add(sent, 0.0)
         add([], 0.0)

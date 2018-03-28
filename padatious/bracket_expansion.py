@@ -20,9 +20,9 @@ class Fragment(object):
         """
         Construct a sentence tree fragment which is merely a wrapper for
         a list of Strings
-        
+
         Args:
-            tree (?): Base tree for the sentence fragment, type depends on 
+            tree (?): Base tree for the sentence fragment, type depends on
                         subclass, refer to those subclasses
         """
         self._tree = tree
@@ -34,7 +34,7 @@ class Fragment(object):
     def expand(self):
         """
         Expanded version of the fragment. In this case an empty sentence.
-        
+
         Returns:
             List<List<str>>: A list with an empty sentence (= token/string list)
         """
@@ -50,16 +50,16 @@ class Fragment(object):
 class Word(Fragment):
     """
     Single word in the sentence tree.
-    
+
     Construct with a string as argument.
     """
 
     def expand(self):
         """
         Creates one sentence that contains exactly that word.
-        
+
         Returns:
-            List<List<str>>: A list with the given string as sentence 
+            List<List<str>>: A list with the given string as sentence
                                 (= token/string list)
         """
         return [[self._tree]]
@@ -68,14 +68,14 @@ class Word(Fragment):
 class Sentence(Fragment):
     """
     A Sentence made of several concatenations/words.
-    
+
     Construct with a List<Fragment> as argument.
     """
 
     def expand(self):
         """
         Creates a combination of all sub-sentences.
-        
+
         Returns:
             List<List<str>>: A list with all subsentence expansions combined in
                                 every possible way
@@ -95,14 +95,14 @@ class Sentence(Fragment):
 class Options(Fragment):
     """
     A Combination of possible sub-sentences.
-    
+
     Construct with List<Fragment> as argument.
     """
 
     def expand(self):
         """
         Returns all of its options as seperated sub-sentences.
-        
+
         Returns:
             List<List<str>>: A list containing the sentences created by all
                                 expansions of its sub-sentences
@@ -143,7 +143,7 @@ class SentenceTreeParser(object):
         cur_sentence = []
         sentence_list.append(Sentence(cur_sentence))
         # Determine which form the current expression has
-        while(self._current_position < len(self.tokens)):
+        while self._current_position < len(self.tokens):
             cur = self.tokens[self._current_position]
             self._current_position += 1
             if cur == '(':
