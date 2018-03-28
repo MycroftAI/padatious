@@ -31,6 +31,11 @@ def test_expand_parentheses():
     def xp(s): return {''.join(sent) for sent in expand_parentheses(tokenize(s))}
     assert xp('1 (2|3) 4 (5|6) 7') == {'12457', '12467', '13457', '13467'}
     assert xp('1 (2 3) 4') == {'1(23)4'}
+    assert xp('1 (2 3|) 4') == {'1234', '14'}
+    assert xp('1 (|2 3) 4') == {'1234', '14'}
+    assert xp('1 ((2|4) (3|)) 4') == {'1(23)4', '1(2)4', '1(43)4', '1(4)4'}
+    assert xp('1 (2|4|5) 4') == {'124', '144', '154'}
+    assert xp('1 (2|4|5 (6|7)) 4') == {'124', '144', '1564', '1574'}
 
 
 def test_resolve_conflicts():

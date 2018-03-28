@@ -75,7 +75,7 @@ class TestAll:
         data = self.cont.calc_intent('10 minute timer')
         assert data.name == 'start.timer'
         assert data.conf > 0.5
-        assert data.matches == {'duration' : '10 minute'}
+        assert data.matches == {'duration': '10 minute'}
 
     def test_multi_extraction_easy(self):
         self.cont.add_intent('search', [

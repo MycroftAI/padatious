@@ -10,3 +10,5 @@ __pycache__/
 .cache/
 .coverage*
 coverage.xml
+/.project
+/.pydevproject

@@ -1,0 +1,6 @@
+<expr> ::= <expr>* | '(' <options> ')' | <word> | <reference>
+<options> ::= <roptions> | <loptions>
+<roptions> ::= ( <expr> | '' ) ( '|' <roptions> )
+<loptions> ::= ( <loptions> '|' ) ( <expr> | '' )
+<reference> ::= '{' <word> '}'
+<word> ::= ('a'| ... |'$'|'('|')')<word>

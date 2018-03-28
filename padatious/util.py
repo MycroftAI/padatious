@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from xxhash import xxh32
+from padatious.bracket_expansion import SentenceTreeParser
 
 
 def lines_hash(lines):
@@ -88,49 +89,7 @@ def expand_parentheses(sent):
     Returns:
         list<list<str>>: Multiple possible sentences from original
     """
-    if '(' not in sent or '|' not in sent:
-        return [sent]
-    else:
-        class State:  # Parentheses state
-            IN = 0
-            OUT = 1
-        state = State.OUT
-        all_pars = {}
-        par_groups = []
-        cur_group = []
-
-        remaining = []
-
-        for token in sent:
-            if state == State.IN:
-                if token in ')|':
-                    par_groups.append(cur_group)
-                    cur_group = []
-                else:
-                    cur_group.append(token)
-                if token == ')':
-                    state = State.OUT
-                    all_pars[len(remaining)] = par_groups
-                    remaining.append('()')
-                    par_groups = []
-            elif state == State.OUT:
-                if token == '(':
-                    state = State.IN
-                else:
-                    remaining.append(token)
-
-        sents = [[]]
-        for i, token in enumerate(remaining):
-            if token == '()':
-                for j in list(range(len(sents))):
-                    pairs = all_pars[i]
-                    for p in pairs[1:]:
-                        sents.append(sents[j] + p)
-                    sents[j] += pairs[0]
-            else:
-                for sent in sents:
-                    sent.append(token)
-        return sents
+    return SentenceTreeParser(sent).expand_parentheses()
 
 
 def remove_comments(lines):
@@ -169,4 +128,5 @@ class StrEnum(object):
     """Enum with strings as keys. Implements items method"""
     @classmethod
     def values(cls):
-        return [getattr(cls, i) for i in dir(cls) if not i.startswith("__") and i != 'values']
+        return [getattr(cls, i) for i in dir(cls)
+                if not i.startswith("__") and i != 'values']
