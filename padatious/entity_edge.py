@@ -74,7 +74,8 @@ class EntityEdge(object):
     def load(self, prefix):
         prefix += '.' + {-1: 'l', +1: 'r'}[self.dir]
         self.net = fann.neural_net()
-        self.net.create_from_file(str(prefix + '.net'))  # Must have str()
+        if not self.net.create_from_file(str(prefix + '.net')):  # Must have str()
+            raise FileNotFoundError(str(prefix + '.net'))
         self.ids.load(prefix)
 
     def train(self, train_data):

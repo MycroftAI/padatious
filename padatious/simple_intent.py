@@ -121,6 +121,7 @@ class SimpleIntent(object):
         prefix += '.intent'
         self = cls(name)
         self.net = fann.neural_net()
-        self.net.create_from_file(str(prefix + '.net'))  # Must have str()
+        if not self.net.create_from_file(str(prefix + '.net')):  # Must have str()
+            raise FileNotFoundError(str(prefix + '.net'))
         self.ids.load(prefix)
         return self

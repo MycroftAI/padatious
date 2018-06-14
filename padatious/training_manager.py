@@ -11,8 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import multiprocessing as mp
+from functools import partial
+from multiprocessing.context import TimeoutError
 from os import mkdir
 from os.path import join, isfile, isdir, splitext
 
@@ -68,31 +69,33 @@ class TrainingManager(object):
         self.objects_to_train = [i for i in self.objects_to_train if i.name != name]
         self.train_data.remove_lines(name)
 
-    def train(self, debug=True, single_thread=False):
+    def train(self, debug=True, single_thread=False, timeout=20):
         if not isdir(self.cache):
             mkdir(self.cache)
 
-        def args(i):
-            return i, self.cache, self.train_data, debug
+        train = partial(
+            _train_and_save, cache=self.cache, data=self.train_data, print_updates=debug
+        )
 
         if single_thread:
             for i in self.objects_to_train:
-                _train_and_save(*args(i))
+                train(i)
         else:
             # Train in multiple processes to disk
             pool = mp.Pool()
             try:
-                results = [
-                    pool.apply_async(_train_and_save, args(i))
-                    for i in self.objects_to_train
-                ]
-
-                for i in results:
-                    i.get()
+                pool.map_async(train, self.objects_to_train).get(timeout)
+            except TimeoutError:
+                if debug:
+                    print('Some objects timed out while training')
             finally:
                 pool.close()
 
         # Load saved objects from disk
         for obj in self.objects_to_train:
-            self.objects.append(self.cls.from_file(name=obj.name, folder=self.cache))
+            try:
+                self.objects.append(self.cls.from_file(name=obj.name, folder=self.cache))
+            except IOError:
+                if debug:
+                    print('Took too long to train', obj.name)
         self.objects_to_train = []

@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import padaos
+
 from padatious.entity import Entity
 from padatious.entity_manager import EntityManager
 from padatious.intent_manager import IntentManager
@@ -26,8 +28,9 @@ class IntentContainer(object):
     def __init__(self, cache_dir):
         self.intents = IntentManager(cache_dir)
         self.entities = EntityManager(cache_dir)
+        self.padaos = padaos.IntentContainer()
 
-    def add_intent(self, *args, **kwargs):
+    def add_intent(self, name, lines, reload_cache=False):
         """
         Creates a new intent, optionally checking the cache first
 
@@ -36,9 +39,10 @@ class IntentContainer(object):
             lines (list<str>): All the sentences that should activate the intent
             reload_cache: Whether to ignore cached intent if exists
         """
-        self.intents.add(*args, **kwargs)
+        self.intents.add(name, lines, reload_cache)
+        self.padaos.add_intent(name, lines)
 
-    def add_entity(self, name, *args, **kwargs):
+    def add_entity(self, name, lines, reload_cache=False):
         """
         Adds an entity that matches the given lines.
 
@@ -52,9 +56,10 @@ class IntentContainer(object):
             reload_cache (bool): Whether to refresh all of cache
         """
         Entity.verify_name(name)
-        self.entities.add(Entity.wrap_name(name), *args, **kwargs)
+        self.entities.add(Entity.wrap_name(name), lines, reload_cache)
+        self.padaos.add_entity(name, lines)
 
-    def load_entity(self, name, *args, **kwargs):
+    def load_entity(self, name, file_name, reload_cache=False):
         """
        Loads an entity, optionally checking the cache first
 
@@ -64,13 +69,15 @@ class IntentContainer(object):
            reload_cache (bool): Whether to refresh all of cache
        """
         Entity.verify_name(name)
-        self.entities.load(Entity.wrap_name(name), *args, **kwargs)
+        self.entities.load(Entity.wrap_name(name), file_name, reload_cache)
+        with open(file_name) as f:
+            self.padaos.add_entity(f.read().split('\n'))
 
     def load_file(self, *args, **kwargs):
         """Legacy. Use load_intent instead"""
         self.load_intent(*args, **kwargs)
 
-    def load_intent(self, *args, **kwargs):
+    def load_intent(self, name, file_name, reload_cache=False):
         """
         Loads an intent, optionally checking the cache first
 
@@ -79,15 +86,19 @@ class IntentContainer(object):
             file_name (str): The location of the intent file
             reload_cache (bool): Whether to refresh all of cache
         """
-        self.intents.load(*args, **kwargs)
+        self.intents.load(name, file_name, reload_cache)
+        with open(file_name) as f:
+            self.padaos.add_intent(name, f.read().split('\n'))
 
     def remove_intent(self, name):
         """Unload an intent"""
         self.intents.remove(name)
+        self.padaos.remove_intent(name)
 
     def remove_entity(self, name):
         """Unload an entity"""
         self.entities.remove(name)
+        self.padaos.remove_entity(name)
 
     def train(self, *args, **kwargs):
         """
@@ -103,6 +114,7 @@ class IntentContainer(object):
         self.intents.train(*args, **kwargs)
         self.entities.train(*args, **kwargs)
         self.entities.calc_ent_dict()
+        self.padaos.compile()
 
     def calc_intents(self, query):
         """
@@ -115,7 +127,15 @@ class IntentContainer(object):
             list<MatchData>: List of intent matches
         See calc_intent() for a description of the returned MatchData
         """
-        return self.intents.calc_intents(query, self.entities)
+        intents = {
+            i.name: i for i in self.intents.calc_intents(query, self.entities)
+        }
+        for perfect_match in self.padaos.calc_intents(query):
+            intent = intents.get(perfect_match['name'])
+            if intent:
+                intent.conf = 1.0
+                intent.matches = perfect_match['entities']
+        return list(intents.values())
 
     def calc_intent(self, query):
         """
