@@ -71,7 +71,7 @@ class IntentContainer(object):
         Entity.verify_name(name)
         self.entities.load(Entity.wrap_name(name), file_name, reload_cache)
         with open(file_name) as f:
-            self.padaos.add_entity(f.read().split('\n'))
+            self.padaos.add_entity(name, f.read().split('\n'))
 
     def load_file(self, *args, **kwargs):
         """Legacy. Use load_intent instead"""
