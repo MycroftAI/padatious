@@ -93,16 +93,16 @@ class TestIntentContainer:
     def test_remove(self):
         self.test_add_intent()
         self.cont.train(False)
-        assert self.cont.calc_intent('This is a test').conf > 0.5
+        assert self.cont.calc_intent('This is a test').conf == 1.0
         self.cont.remove_intent('test')
         assert self.cont.calc_intent('This is a test').conf < 0.5
         self.cont.add_intent('thing', ['A {thing}'])
         self.cont.add_entity('thing', ['thing'])
         self.cont.train(False)
         assert self.cont.calc_intent('A dog').conf < 0.5
-        assert self.cont.calc_intent('A thing').conf > 0.5
+        assert self.cont.calc_intent('A thing').conf == 1.0
         self.cont.remove_entity('thing')
-        assert self.cont.calc_intent('A dog').conf > 0.5
+        assert self.cont.calc_intent('A dog').conf == 1.0
 
     def teardown(self):
         if isdir('temp'):

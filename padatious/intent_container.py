@@ -13,6 +13,7 @@
 # limitations under the License.
 import padaos
 
+from padatious.match_data import MatchData
 from padatious.entity import Entity
 from padatious.entity_manager import EntityManager
 from padatious.intent_manager import IntentManager
@@ -147,4 +148,7 @@ class IntentContainer(object):
         Returns:
             MatchData: Best intent match
         """
-        return self.intents.calc_intent(query, self.entities)
+        matches = self.calc_intents(query)
+        if len(matches) == 0:
+            return MatchData('', '')
+        return max(matches, key=lambda x: x.conf)

@@ -30,9 +30,3 @@ class IntentManager(TrainingManager):
             match.detokenize()
             matches.append(match)
         return matches
-
-    def calc_intent(self, query, entity_manager):
-        matches = self.calc_intents(query, entity_manager)
-        if len(matches) == 0:
-            return MatchData('', '')
-        return max(matches, key=lambda x: x.conf)
