@@ -27,6 +27,7 @@ class IntentContainer(object):
         cache_dir (str): Place to put all saved neural networks
     """
     def __init__(self, cache_dir):
+        self.must_train = False
         self.intents = IntentManager(cache_dir)
         self.entities = EntityManager(cache_dir)
         self.padaos = padaos.IntentContainer()
@@ -42,6 +43,7 @@ class IntentContainer(object):
         """
         self.intents.add(name, lines, reload_cache)
         self.padaos.add_intent(name, lines)
+        self.must_train = True
 
     def add_entity(self, name, lines, reload_cache=False):
         """
@@ -59,6 +61,7 @@ class IntentContainer(object):
         Entity.verify_name(name)
         self.entities.add(Entity.wrap_name(name), lines, reload_cache)
         self.padaos.add_entity(name, lines)
+        self.must_train = True
 
     def load_entity(self, name, file_name, reload_cache=False):
         """
@@ -95,6 +98,7 @@ class IntentContainer(object):
         """Unload an intent"""
         self.intents.remove(name)
         self.padaos.remove_intent(name)
+        self.must_train = True
 
     def remove_entity(self, name):
         """Unload an entity"""
@@ -116,6 +120,7 @@ class IntentContainer(object):
         self.entities.train(*args, **kwargs)
         self.entities.calc_ent_dict()
         self.padaos.compile()
+        self.must_train = False
 
     def calc_intents(self, query):
         """
@@ -128,6 +133,8 @@ class IntentContainer(object):
             list<MatchData>: List of intent matches
         See calc_intent() for a description of the returned MatchData
         """
+        if self.must_train:
+            self.train()
         intents = {
             i.name: i for i in self.intents.calc_intents(query, self.entities)
         }
