@@ -104,6 +104,16 @@ class TestIntentContainer:
         self.cont.remove_entity('thing')
         assert self.cont.calc_intent('A dog').conf == 1.0
 
+    def test_overlap(self):
+        self.cont.add_intent('song', ['play {song}'])
+        self.cont.add_intent('news', ['play the news'])
+        assert self.cont.calc_intent('play the news').name == 'news'
+
+    def test_overlap_backwards(self):
+        self.cont.add_intent('song', ['play {song}'])
+        self.cont.add_intent('news', ['play the news'])
+        assert self.cont.calc_intent('play the news').name == 'news'
+
     def teardown(self):
         if isdir('temp'):
             rmtree('temp')
