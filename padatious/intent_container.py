@@ -158,4 +158,6 @@ class IntentContainer(object):
         matches = self.calc_intents(query)
         if len(matches) == 0:
             return MatchData('', '')
-        return max(matches, key=lambda x: x.conf)
+        best_match = max(matches, key=lambda x: x.conf)
+        best_matches = (match for match in matches if match.conf == best_match.conf)
+        return min(best_matches, key=lambda x: sum(map(len, x.matches.values())))
