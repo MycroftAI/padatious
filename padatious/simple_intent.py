@@ -33,7 +33,7 @@ class SimpleIntent(object):
     def __init__(self, name=''):
         self.name = name
         self.ids = IdManager(Ids)
-        self.net = None
+        self.net = None  # type: fann.neural_net
 
     def match(self, sent):
         return max(0, self.net.run(self.vectorize(sent))[0])
