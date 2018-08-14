@@ -102,6 +102,14 @@ class SimpleIntent(object):
             add(sent, 0.0)
         add([], 0.0)
 
+        for sent in train_data.my_sents(self.name):
+            without_entities = sent[:]
+            for i, token in enumerate(without_entities):
+                if token.startswith('{'):
+                    without_entities[i] = ':null:'
+            if without_entities != sent:
+                add(without_entities, 0.0)
+
         inputs, outputs = resolve_conflicts(inputs, outputs)
 
         train_data = fann.training_data()
