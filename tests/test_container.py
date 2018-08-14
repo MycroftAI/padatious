@@ -116,6 +116,20 @@ class TestIntentContainer:
         self.cont.train(False)
         assert self.cont.calc_intent('play the news').name == 'news'
 
+    def test_generalize(self):
+        self.cont.add_intent('timer', [
+            'set a timer for {time} minutes',
+            'make a {time} minute timer'
+        ])
+        self.cont.add_entity('time', [
+            '#', '##', '#:##', '##:##'
+        ])
+        self.cont.train(False)
+        intent = self.cont.calc_intent('make a timer for 3 minute')
+        print(intent)
+        assert intent.name == 'timer'
+        assert intent.matches == {'time': '3'}
+
     def teardown(self):
         if isdir('temp'):
             rmtree('temp')

@@ -33,7 +33,7 @@ class SimpleIntent(object):
     def __init__(self, name=''):
         self.name = name
         self.ids = IdManager(Ids)
-        self.net = None
+        self.net = None  # type: fann.neural_net
 
     def match(self, sent):
         return max(0, self.net.run(self.vectorize(sent))[0])
@@ -91,13 +91,25 @@ class SimpleIntent(object):
         for sent in train_data.my_sents(self.name):
             add(sent, 1.0)
             weight(sent)
-            if not any(word[0] == ':' for word in sent):
+
+            # Generate samples with extra unknown tokens unless
+            # the sentence is supposed to allow unknown tokens via the special :0
+            if not any(word[0] == ':' and word != ':' for word in sent):
                 pollute(sent, 0)
                 pollute(sent, len(sent))
 
         for sent in train_data.other_sents(self.name):
             add(sent, 0.0)
+        add([':null:'], 0.0)
         add([], 0.0)
+
+        for sent in train_data.my_sents(self.name):
+            without_entities = sent[:]
+            for i, token in enumerate(without_entities):
+                if token.startswith('{'):
+                    without_entities[i] = ':null:'
+            if without_entities != sent:
+                add(without_entities, 0.0)
 
         inputs, outputs = resolve_conflicts(inputs, outputs)
 
