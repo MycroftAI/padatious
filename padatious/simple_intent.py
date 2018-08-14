@@ -100,6 +100,7 @@ class SimpleIntent(object):
 
         for sent in train_data.other_sents(self.name):
             add(sent, 0.0)
+        add([':null:'], 0.0)
         add([], 0.0)
 
         for sent in train_data.my_sents(self.name):
