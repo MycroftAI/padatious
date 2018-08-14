@@ -91,7 +91,10 @@ class SimpleIntent(object):
         for sent in train_data.my_sents(self.name):
             add(sent, 1.0)
             weight(sent)
-            if not any(word[0] == ':' for word in sent):
+
+            # Generate samples with extra unknown tokens unless
+            # the sentence is supposed to allow unknown tokens via the special :0
+            if not any(word[0] == ':' and word != ':' for word in sent):
                 pollute(sent, 0)
                 pollute(sent, len(sent))
 
