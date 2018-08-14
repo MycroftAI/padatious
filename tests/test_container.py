@@ -107,11 +107,13 @@ class TestIntentContainer:
     def test_overlap(self):
         self.cont.add_intent('song', ['play {song}'])
         self.cont.add_intent('news', ['play the news'])
+        self.cont.train(False)
         assert self.cont.calc_intent('play the news').name == 'news'
 
     def test_overlap_backwards(self):
         self.cont.add_intent('song', ['play {song}'])
         self.cont.add_intent('news', ['play the news'])
+        self.cont.train(False)
         assert self.cont.calc_intent('play the news').name == 'news'
 
     def teardown(self):
