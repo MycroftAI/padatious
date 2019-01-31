@@ -90,6 +90,7 @@ class TrainingManager(object):
                     print('Some objects timed out while training')
             finally:
                 pool.close()
+                pool.join()
 
         # Load saved objects from disk
         for obj in self.objects_to_train:
