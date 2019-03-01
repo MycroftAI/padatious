@@ -11,12 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from time import sleep
+
 import padaos
+from threading import Thread
 
 from padatious.match_data import MatchData
 from padatious.entity import Entity
 from padatious.entity_manager import EntityManager
 from padatious.intent_manager import IntentManager
+from padatious.util import tokenize
 
 
 class IntentContainer(object):
@@ -31,6 +35,7 @@ class IntentContainer(object):
         self.intents = IntentManager(cache_dir)
         self.entities = EntityManager(cache_dir)
         self.padaos = padaos.IntentContainer()
+        self.train_thread = None  # type: Thread
 
     def add_intent(self, name, lines, reload_cache=False):
         """
@@ -105,6 +110,13 @@ class IntentContainer(object):
         self.entities.remove(name)
         self.padaos.remove_entity(name)
 
+    def _train(self, *args, **kwargs):
+        t1 = Thread(target=self.intents.train, args=args, kwargs=kwargs)
+        t2 = Thread(target=self.entities.train,  args=args, kwargs=kwargs)
+        t1.join()
+        t2.join()
+        self.entities.calc_ent_dict()
+
     def train(self, *args, **kwargs):
         """
         Trains all the loaded intents that need to be updated
@@ -116,10 +128,13 @@ class IntentContainer(object):
                 each time a new intent is trained
             single_thread (bool): Whether to force running in a single thread
         """
-        self.intents.train(*args, **kwargs)
-        self.entities.train(*args, **kwargs)
-        self.entities.calc_ent_dict()
         self.padaos.compile()
+
+        timeout = kwargs.setdefault('timeout', 20)
+        self.train_thread = Thread(target=self._train, args=args, kwargs=kwargs)
+        self.train_thread.start()
+        self.train_thread.join(timeout)
+
         self.must_train = False
 
     def calc_intents(self, query):
@@ -135,14 +150,13 @@ class IntentContainer(object):
         """
         if self.must_train:
             self.train()
-        intents = {
+        intents = {} if self.train_thread.is_alive() else {
             i.name: i for i in self.intents.calc_intents(query, self.entities)
         }
+        sent = tokenize(query)
         for perfect_match in self.padaos.calc_intents(query):
-            intent = intents.get(perfect_match['name'])
-            if intent:
-                intent.conf = 1.0
-                intent.matches = perfect_match['entities']
+            name = perfect_match['name']
+            intents[name] = MatchData(name, sent, matches=perfect_match['entities'], conf=1.0)
         return list(intents.values())
 
     def calc_intent(self, query):
