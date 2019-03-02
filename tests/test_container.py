@@ -11,7 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from time import monotonic
 
+import pytest
+import random
 from os import mkdir
 from os.path import isdir, join
 from shutil import rmtree
@@ -54,6 +57,27 @@ class TestIntentContainer:
 
         test(False, False)
         test(True, True)
+
+    def _create_large_intent(self, depth):
+        if depth == 0:
+            return '(a|b|)'
+        return '{0} {0}'.format(self._create_large_intent(depth - 1))
+
+    @pytest.mark.skip(reason="Takes a long time")
+    def test_train_timeout(self):
+        self.cont.add_intent('a', [
+            ' '.join(random.choice('abcdefghijklmnopqrstuvwxyz') for _ in range(5))
+            for __ in range(300)
+        ])
+        self.cont.add_intent('b', [
+            ' '.join(random.choice('abcdefghijklmnopqrstuvwxyz') for _ in range(5))
+            for __ in range(300)
+
+        ])
+        a = monotonic()
+        self.cont.train(True, timeout=1)
+        b = monotonic()
+        assert b - a <= 2
 
     def test_calc_intents(self):
         self.test_add_intent()

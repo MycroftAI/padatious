@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from os import mkdir
+
+from os.path import isdir
 from time import sleep
 
 import padaos
@@ -31,6 +34,8 @@ class IntentContainer(object):
         cache_dir (str): Place to put all saved neural networks
     """
     def __init__(self, cache_dir):
+        if not isdir(cache_dir):
+            mkdir(cache_dir)
         self.must_train = False
         self.intents = IntentManager(cache_dir)
         self.entities = EntityManager(cache_dir)
@@ -111,8 +116,10 @@ class IntentContainer(object):
         self.padaos.remove_entity(name)
 
     def _train(self, *args, **kwargs):
-        t1 = Thread(target=self.intents.train, args=args, kwargs=kwargs)
-        t2 = Thread(target=self.entities.train,  args=args, kwargs=kwargs)
+        t1 = Thread(target=self.intents.train, args=args, kwargs=kwargs, daemon=True)
+        t2 = Thread(target=self.entities.train,  args=args, kwargs=kwargs, daemon=True)
+        t1.start()
+        t2.start()
         t1.join()
         t2.join()
         self.entities.calc_ent_dict()
@@ -131,7 +138,7 @@ class IntentContainer(object):
         self.padaos.compile()
 
         timeout = kwargs.setdefault('timeout', 20)
-        self.train_thread = Thread(target=self._train, args=args, kwargs=kwargs)
+        self.train_thread = Thread(target=self._train, args=args, kwargs=kwargs, daemon=True)
         self.train_thread.start()
         self.train_thread.join(timeout)
 
