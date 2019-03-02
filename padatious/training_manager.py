@@ -70,9 +70,6 @@ class TrainingManager(object):
         self.train_data.remove_lines(name)
 
     def train(self, debug=True, single_thread=False, timeout=20):
-        if not isdir(self.cache):
-            mkdir(self.cache)
-
         train = partial(
             _train_and_save, cache=self.cache, data=self.train_data, print_updates=debug
         )
