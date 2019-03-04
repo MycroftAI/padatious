@@ -124,7 +124,7 @@ class IntentContainer(object):
         t2.join()
         self.entities.calc_ent_dict()
 
-    def train(self, *args, **kwargs):
+    def train(self, *args, force=False, **kwargs):
         """
         Trains all the loaded intents that need to be updated
         If a cache file exists with the same hash as the intent file,
@@ -133,8 +133,11 @@ class IntentContainer(object):
         Args:
             print_updates (bool): Whether to print a message to stdout
                 each time a new intent is trained
+            force (bool): Whether to force training if already finished
             single_thread (bool): Whether to force running in a single thread
         """
+        if not self.must_train and not force:
+            return
         self.padaos.compile()
 
         timeout = kwargs.setdefault('timeout', 20)
@@ -157,7 +160,7 @@ class IntentContainer(object):
         """
         if self.must_train:
             self.train()
-        intents = {} if self.train_thread.is_alive() else {
+        intents = {} if self.train_thread and self.train_thread.is_alive() else {
             i.name: i for i in self.intents.calc_intents(query, self.entities)
         }
         sent = tokenize(query)
