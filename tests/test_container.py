@@ -64,7 +64,7 @@ class TestIntentContainer:
             return '(a|b|)'
         return '{0} {0}'.format(self._create_large_intent(depth - 1))
 
-    @pytest.mark.skip(reason="Takes a long time")
+    @pytest.mark.skipif(not os.environ.get('RUN_LONG'), reason="Takes a long time")
     def test_train_timeout(self):
         self.cont.add_intent('a', [
             ' '.join(random.choice('abcdefghijklmnopqrstuvwxyz') for _ in range(5))
