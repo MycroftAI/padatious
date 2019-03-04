@@ -13,6 +13,7 @@
 # limitations under the License.
 from time import monotonic
 
+import os
 import pytest
 import random
 from os import mkdir
@@ -78,6 +79,11 @@ class TestIntentContainer:
         self.cont.train(True, timeout=1)
         b = monotonic()
         assert b - a <= 2
+
+        a = monotonic()
+        self.cont.train(True, timeout=1)
+        b = monotonic()
+        assert b - a <= 0.1
 
     def test_calc_intents(self):
         self.test_add_intent()
