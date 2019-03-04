@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 from os import mkdir
 
 from os.path import isdir
@@ -34,8 +35,7 @@ class IntentContainer(object):
         cache_dir (str): Place to put all saved neural networks
     """
     def __init__(self, cache_dir):
-        if not isdir(cache_dir):
-            mkdir(cache_dir)
+        os.makedirs(cache_dir, exist_ok=True)
         self.must_train = False
         self.intents = IntentManager(cache_dir)
         self.entities = EntityManager(cache_dir)
