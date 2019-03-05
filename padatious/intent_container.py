@@ -135,6 +135,8 @@ class IntentContainer(object):
                 each time a new intent is trained
             force (bool): Whether to force training if already finished
             single_thread (bool): Whether to force running in a single thread
+        Returns:
+            bool: True if training succeeded without timeout
         """
         if not self.must_train and not force:
             return
@@ -146,6 +148,7 @@ class IntentContainer(object):
         self.train_thread.join(timeout)
 
         self.must_train = False
+        return not self.train_thread.is_alive()
 
     def calc_intents(self, query):
         """
