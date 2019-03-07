@@ -14,7 +14,6 @@
 import multiprocessing as mp
 from functools import partial
 from multiprocessing.context import TimeoutError
-from os import mkdir
 from os.path import join, isfile, isdir, splitext
 
 import padatious
