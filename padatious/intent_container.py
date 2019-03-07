@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-from os import mkdir
-
-from os.path import isdir
-from time import sleep
 
 import padaos
 from threading import Thread
