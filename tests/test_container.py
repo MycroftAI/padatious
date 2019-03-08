@@ -85,6 +85,32 @@ class TestIntentContainer:
         b = monotonic()
         assert b - a <= 0.1
 
+    def test_train_timeout_subprocess(self):
+        self.cont.add_intent('a', [
+            ' '.join(random.choice('abcdefghijklmnopqrstuvwxyz') for _ in range(5))
+            for __ in range(300)
+        ])
+        self.cont.add_intent('b', [
+            ' '.join(random.choice('abcdefghijklmnopqrstuvwxyz') for _ in range(5))
+            for __ in range(300)
+        ])
+        a = monotonic()
+        assert not self.cont.train_subprocess(timeout=0.1)
+        b = monotonic()
+        assert b - a <= 1
+
+    def test_train_subprocess(self):
+        self.cont.add_intent('timer', [
+            'set a timer for {time} minutes',
+        ])
+        self.cont.add_entity('time', [
+            '#', '##', '#:##', '##:##'
+        ])
+        assert self.cont.train_subprocess(False, timeout=20)
+        intent = self.cont.calc_intent('set timer for 3 minutes')
+        assert intent.name == 'timer'
+        assert intent.matches == {'time': '3'}
+
     def test_calc_intents(self):
         self.test_add_intent()
         self.cont.train(False)
@@ -156,7 +182,6 @@ class TestIntentContainer:
         ])
         self.cont.train(False)
         intent = self.cont.calc_intent('make a timer for 3 minute')
-        print(intent)
         assert intent.name == 'timer'
         assert intent.matches == {'time': '3'}
 
