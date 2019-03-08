@@ -11,9 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import inspect
+import json
 import os
 
 import padaos
+import sys
+from functools import wraps
+from subprocess import call, check_output
 from threading import Thread
 
 from padatious.match_data import MatchData
@@ -23,6 +28,19 @@ from padatious.intent_manager import IntentManager
 from padatious.util import tokenize
 
 
+def _save_args(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        func(*args, **kwargs)
+        bound_args = inspect.signature(func).bind(*args, **kwargs)
+        bound_args.apply_defaults()
+        kwargs = bound_args.arguments
+        kwargs['__name__'] = func.__name__
+        kwargs.pop('self').serialized_args.append(kwargs)
+
+    return wrapper
+
+
 class IntentContainer(object):
     """
     Creates an IntentContainer object used to load and match intents
@@ -30,14 +48,27 @@ class IntentContainer(object):
     Args:
         cache_dir (str): Place to put all saved neural networks
     """
+
     def __init__(self, cache_dir):
         os.makedirs(cache_dir, exist_ok=True)
+        self.cache_dir = cache_dir
         self.must_train = False
         self.intents = IntentManager(cache_dir)
         self.entities = EntityManager(cache_dir)
         self.padaos = padaos.IntentContainer()
         self.train_thread = None  # type: Thread
+        self.serialized_args = []  # Arguments of all calls to register intents/entities
 
+    def clear(self):
+        os.makedirs(self.cache_dir, exist_ok=True)
+        self.must_train = False
+        self.intents = IntentManager(self.cache_dir)
+        self.entities = EntityManager(self.cache_dir)
+        self.padaos = padaos.IntentContainer()
+        self.train_thread = None
+        self.serialized_args = []
+
+    @_save_args
     def add_intent(self, name, lines, reload_cache=False):
         """
         Creates a new intent, optionally checking the cache first
@@ -51,6 +82,7 @@ class IntentContainer(object):
         self.padaos.add_intent(name, lines)
         self.must_train = True
 
+    @_save_args
     def add_entity(self, name, lines, reload_cache=False):
         """
         Adds an entity that matches the given lines.
@@ -69,6 +101,7 @@ class IntentContainer(object):
         self.padaos.add_entity(name, lines)
         self.must_train = True
 
+    @_save_args
     def load_entity(self, name, file_name, reload_cache=False):
         """
        Loads an entity, optionally checking the cache first
@@ -83,10 +116,12 @@ class IntentContainer(object):
         with open(file_name) as f:
             self.padaos.add_entity(name, f.read().split('\n'))
 
+    @_save_args
     def load_file(self, *args, **kwargs):
         """Legacy. Use load_intent instead"""
         self.load_intent(*args, **kwargs)
 
+    @_save_args
     def load_intent(self, name, file_name, reload_cache=False):
         """
         Loads an intent, optionally checking the cache first
@@ -100,12 +135,14 @@ class IntentContainer(object):
         with open(file_name) as f:
             self.padaos.add_intent(name, f.read().split('\n'))
 
+    @_save_args
     def remove_intent(self, name):
         """Unload an intent"""
         self.intents.remove(name)
         self.padaos.remove_intent(name)
         self.must_train = True
 
+    @_save_args
     def remove_entity(self, name):
         """Unload an entity"""
         self.entities.remove(name)
@@ -113,38 +150,69 @@ class IntentContainer(object):
 
     def _train(self, *args, **kwargs):
         t1 = Thread(target=self.intents.train, args=args, kwargs=kwargs, daemon=True)
-        t2 = Thread(target=self.entities.train,  args=args, kwargs=kwargs, daemon=True)
+        t2 = Thread(target=self.entities.train, args=args, kwargs=kwargs, daemon=True)
         t1.start()
         t2.start()
         t1.join()
         t2.join()
         self.entities.calc_ent_dict()
 
-    def train(self, *args, force=False, **kwargs):
+    def train(self, debug=True, force=False, single_thread=False, timeout=20):
         """
         Trains all the loaded intents that need to be updated
         If a cache file exists with the same hash as the intent file,
         the intent will not be trained and just loaded from file
 
         Args:
-            print_updates (bool): Whether to print a message to stdout
-                each time a new intent is trained
+            debug (bool): Whether to print a message to stdout each time a new intent is trained
             force (bool): Whether to force training if already finished
             single_thread (bool): Whether to force running in a single thread
+            timeout (float): Seconds before cancelling training
         Returns:
             bool: True if training succeeded without timeout
         """
         if not self.must_train and not force:
             return
         self.padaos.compile()
-
-        timeout = kwargs.setdefault('timeout', 20)
-        self.train_thread = Thread(target=self._train, args=args, kwargs=kwargs, daemon=True)
+        self.train_thread = Thread(target=self._train, kwargs=dict(
+            debug=debug,
+            single_thread=single_thread,
+            timeout=timeout
+        ), daemon=True)
         self.train_thread.start()
         self.train_thread.join(timeout)
 
         self.must_train = False
         return not self.train_thread.is_alive()
+
+    def train_subprocess(self, *args, **kwargs):
+        """
+        Trains in a subprocess which provides a timeout guarantees everything shuts down properly
+
+        Args:
+            See <train>
+        Returns:
+            bool: True for success, False if timed out
+        """
+        ret = call([
+            sys.executable, '-m', 'padatious', 'train', self.cache_dir,
+            '-d', json.dumps(self.serialized_args),
+            '-a', json.dumps(args),
+            '-k', json.dumps(kwargs),
+        ])
+        if ret == 2:
+            raise TypeError('Invalid train arguments: {} {}'.format(args, kwargs))
+        data = self.serialized_args
+        self.clear()
+        self.apply_training_args(data)
+        self.padaos.compile()
+        if ret == 0:
+            self.must_train = False
+            return True
+        elif ret == 10:  # timeout
+            return False
+        else:
+            raise ValueError('Training failed and returned code: {}'.format(ret))
 
     def calc_intents(self, query):
         """
@@ -184,3 +252,11 @@ class IntentContainer(object):
         best_match = max(matches, key=lambda x: x.conf)
         best_matches = (match for match in matches if match.conf == best_match.conf)
         return min(best_matches, key=lambda x: sum(map(len, x.matches.values())))
+
+    def get_training_args(self):
+        return self.serialized_args
+
+    def apply_training_args(self, data):
+        for params in data:
+            func_name = params.pop('__name__')
+            getattr(self, func_name)(**params)

@@ -35,5 +35,10 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
+    entry_points={
+        'console_scripts': [
+            'padatious=padatious.__main__:main'
+        ]
+    },
     keywords='intent-parser parser text text-processing',
 )
