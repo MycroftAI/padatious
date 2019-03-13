@@ -115,6 +115,7 @@ class IntentContainer(object):
         self.entities.load(Entity.wrap_name(name), file_name, reload_cache)
         with open(file_name) as f:
             self.padaos.add_entity(name, f.read().split('\n'))
+        self.must_train = True
 
     @_save_args
     def load_file(self, *args, **kwargs):
@@ -134,6 +135,7 @@ class IntentContainer(object):
         self.intents.load(name, file_name, reload_cache)
         with open(file_name) as f:
             self.padaos.add_intent(name, f.read().split('\n'))
+        self.must_train = True
 
     @_save_args
     def remove_intent(self, name):
