@@ -68,8 +68,23 @@ class IntentContainer(object):
         self.train_thread = None
         self.serialized_args = []
 
+    def instantiate_from_disk(self):
+        """
+		Instantiates the necessary (internal) data structures when loading persisted model from disk.
+		This is done via injecting entities and intents back from cached file versions.
+		"""
+
+        # ToDo: still padaos.compile (regex compilation) is redone when loading
+        for f in os.listdir(self.cache_dir):
+            if f.startswith('{') and f.endswith('}.hash'):
+                entity_name = f[1:f.find('}.hash')]
+                self.add_entity(name=entity_name, lines=[], reload_cache=False, must_train=False)
+            elif not f.startswith('{') and f.endswith('.hash'):
+                intent_name = f[0:f.find('.hash')]
+                self.add_intent(name=intent_name, lines=[], reload_cache=False, must_train=False)
+
     @_save_args
-    def add_intent(self, name, lines, reload_cache=False):
+    def add_intent(self, name, lines, reload_cache=False, must_train=True):
         """
         Creates a new intent, optionally checking the cache first
 
@@ -78,12 +93,12 @@ class IntentContainer(object):
             lines (list<str>): All the sentences that should activate the intent
             reload_cache: Whether to ignore cached intent if exists
         """
-        self.intents.add(name, lines, reload_cache)
+        self.intents.add(name, lines, reload_cache, must_train)
         self.padaos.add_intent(name, lines)
-        self.must_train = True
+        self.must_train = must_train
 
     @_save_args
-    def add_entity(self, name, lines, reload_cache=False):
+    def add_entity(self, name, lines, reload_cache=False, must_train=True):
         """
         Adds an entity that matches the given lines.
 
@@ -95,14 +110,15 @@ class IntentContainer(object):
             name (str): The name of the entity
             lines (list<str>): Lines of example extracted entities
             reload_cache (bool): Whether to refresh all of cache
+        	must_train (bool): Whether to dismiss model if present and train from scratch again
         """
         Entity.verify_name(name)
-        self.entities.add(Entity.wrap_name(name), lines, reload_cache)
+        self.entities.add(Entity.wrap_name(name), lines, reload_cache, must_train)
         self.padaos.add_entity(name, lines)
-        self.must_train = True
+        self.must_train = must_train
 
     @_save_args
-    def load_entity(self, name, file_name, reload_cache=False):
+    def load_entity(self, name, file_name, reload_cache=False, must_train=True):
         """
        Loads an entity, optionally checking the cache first
 
@@ -110,12 +126,13 @@ class IntentContainer(object):
            name (str): The associated name of the entity
            file_name (str): The location of the entity file
            reload_cache (bool): Whether to refresh all of cache
+           must_train (bool): Whether to dismiss model if present and train from scratch again
        """
         Entity.verify_name(name)
         self.entities.load(Entity.wrap_name(name), file_name, reload_cache)
         with open(file_name) as f:
             self.padaos.add_entity(name, f.read().split('\n'))
-        self.must_train = True
+        self.must_train = must_train
 
     @_save_args
     def load_file(self, *args, **kwargs):
@@ -123,7 +140,7 @@ class IntentContainer(object):
         self.load_intent(*args, **kwargs)
 
     @_save_args
-    def load_intent(self, name, file_name, reload_cache=False):
+    def load_intent(self, name, file_name, reload_cache=False, must_train=True):
         """
         Loads an intent, optionally checking the cache first
 
@@ -131,11 +148,12 @@ class IntentContainer(object):
             name (str): The associated name of the intent
             file_name (str): The location of the intent file
             reload_cache (bool): Whether to refresh all of cache
+            must_train (bool): Whether to dismiss model if present and train from scratch again
         """
         self.intents.load(name, file_name, reload_cache)
         with open(file_name) as f:
             self.padaos.add_intent(name, f.read().split('\n'))
-        self.must_train = True
+        self.must_train = must_train
 
     @_save_args
     def remove_intent(self, name):

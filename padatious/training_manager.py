@@ -45,19 +45,25 @@ class TrainingManager(object):
 
         self.train_data = TrainData()
 
-    def add(self, name, lines, reload_cache=False):
-        hash_fn = join(self.cache, name + '.hash')
-        old_hsh = None
-        if isfile(hash_fn):
-            with open(hash_fn, 'rb') as g:
-                old_hsh = g.read()
-        min_ver = splitext(padatious.__version__)[0]
-        new_hsh = lines_hash([min_ver] + lines)
-        if reload_cache or old_hsh != new_hsh:
-            self.objects_to_train.append(self.cls(name=name, hsh=new_hsh))
-        else:
+    def add(self, name, lines, reload_cache=False, must_train=True):
+
+		# special case: load persisted (aka. cached) resource (i.e. entity or intent) from file into memory data structures
+        if not must_train:
             self.objects.append(self.cls.from_file(name=name, folder=self.cache))
-        self.train_data.add_lines(name, lines)
+		# general case: load resource (entity or intent) to training queue or if no change occurred to memory data structures
+        else:
+            hash_fn = join(self.cache, name + '.hash')
+            old_hsh = None
+            if isfile(hash_fn):
+                with open(hash_fn, 'rb') as g:
+                    old_hsh = g.read()
+            min_ver = splitext(padatious.__version__)[0]
+            new_hsh = lines_hash([min_ver] + lines)
+            if reload_cache or old_hsh != new_hsh:
+                self.objects_to_train.append(self.cls(name=name, hsh=new_hsh))
+            else:
+                self.objects.append(self.cls.from_file(name=name, folder=self.cache))
+            self.train_data.add_lines(name, lines)
 
     def load(self, name, file_name, reload_cache=False):
         with open(file_name) as f:
