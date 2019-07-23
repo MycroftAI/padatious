@@ -59,6 +59,20 @@ class TestIntentContainer:
         test(False, False)
         test(True, True)
 
+    def test_instantiate_from_disk(self):
+        # train and cache (i.e. persist)
+        self.setup()
+        self.test_add_intent()
+        self.cont.train()
+        
+        # instantiate from disk (load cached files)
+        self.setup()
+        self.cont.instantiate_from_disk()
+        
+        assert len(self.cont.intents.train_data.sent_lists) == 0
+        assert len(self.cont.intents.objects_to_train) == 0
+        assert len(self.cont.intents.objects) == 2
+
     def _create_large_intent(self, depth):
         if depth == 0:
             return '(a|b|)'
