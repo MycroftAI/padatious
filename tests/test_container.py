@@ -64,11 +64,11 @@ class TestIntentContainer:
         self.setup()
         self.test_add_intent()
         self.cont.train()
-        
+
         # instantiate from disk (load cached files)
         self.setup()
         self.cont.instantiate_from_disk()
-        
+
         assert len(self.cont.intents.train_data.sent_lists) == 0
         assert len(self.cont.intents.objects_to_train) == 0
         assert len(self.cont.intents.objects) == 2
@@ -78,7 +78,9 @@ class TestIntentContainer:
             return '(a|b|)'
         return '{0} {0}'.format(self._create_large_intent(depth - 1))
 
-    @pytest.mark.skipif(not os.environ.get('RUN_LONG'), reason="Takes a long time")
+    @pytest.mark.skipif(
+        not os.environ.get('RUN_LONG'),
+        reason="Takes a long time")
     def test_train_timeout(self):
         self.cont.add_intent('a', [
             ' '.join(random.choice('abcdefghijklmnopqrstuvwxyz') for _ in range(5))
@@ -130,7 +132,9 @@ class TestIntentContainer:
         self.cont.train(False)
 
         intents = self.cont.calc_intents('this is another test')
-        assert (intents[0].conf > intents[1].conf) == (intents[0].name == 'test')
+        assert (
+            intents[0].conf > intents[1].conf) == (
+            intents[0].name == 'test')
         assert self.cont.calc_intent('this is another test').name == 'test'
 
     def test_empty(self):

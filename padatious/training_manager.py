@@ -37,6 +37,7 @@ class TrainingManager(object):
         cls (Type[Trainable]): Class to wrap
         cache_dir (str): Place to store cache files
     """
+
     def __init__(self, cls, cache_dir):
         self.cls = cls
         self.cache = cache_dir
@@ -47,10 +48,15 @@ class TrainingManager(object):
 
     def add(self, name, lines, reload_cache=False, must_train=True):
 
-		# special case: load persisted (aka. cached) resource (i.e. entity or intent) from file into memory data structures
+                # special case: load persisted (aka. cached) resource (i.e.
+                # entity or intent) from file into memory data structures
         if not must_train:
-            self.objects.append(self.cls.from_file(name=name, folder=self.cache))
-		# general case: load resource (entity or intent) to training queue or if no change occurred to memory data structures
+            self.objects.append(
+                self.cls.from_file(
+                    name=name,
+                    folder=self.cache))
+            # general case: load resource (entity or intent) to training queue
+            # or if no change occurred to memory data structures
         else:
             hash_fn = join(self.cache, name + '.hash')
             old_hsh = None
@@ -62,7 +68,9 @@ class TrainingManager(object):
             if reload_cache or old_hsh != new_hsh:
                 self.objects_to_train.append(self.cls(name=name, hsh=new_hsh))
             else:
-                self.objects.append(self.cls.from_file(name=name, folder=self.cache))
+                self.objects.append(
+                    self.cls.from_file(
+                        name=name, folder=self.cache))
             self.train_data.add_lines(name, lines)
 
     def load(self, name, file_name, reload_cache=False):
@@ -71,13 +79,16 @@ class TrainingManager(object):
 
     def remove(self, name):
         self.objects = [i for i in self.objects if i.name != name]
-        self.objects_to_train = [i for i in self.objects_to_train if i.name != name]
+        self.objects_to_train = [
+            i for i in self.objects_to_train if i.name != name]
         self.train_data.remove_lines(name)
 
     def train(self, debug=True, single_thread=False, timeout=20):
         train = partial(
-            _train_and_save, cache=self.cache, data=self.train_data, print_updates=debug
-        )
+            _train_and_save,
+            cache=self.cache,
+            data=self.train_data,
+            print_updates=debug)
 
         if single_thread:
             for i in self.objects_to_train:
@@ -97,7 +108,10 @@ class TrainingManager(object):
         # Load saved objects from disk
         for obj in self.objects_to_train:
             try:
-                self.objects.append(self.cls.from_file(name=obj.name, folder=self.cache))
+                self.objects.append(
+                    self.cls.from_file(
+                        name=obj.name,
+                        folder=self.cache))
             except IOError:
                 if debug:
                     print('Took too long to train', obj.name)
