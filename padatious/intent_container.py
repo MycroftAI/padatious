@@ -70,18 +70,26 @@ class IntentContainer(object):
 
     def instantiate_from_disk(self):
         """
-		Instantiates the necessary (internal) data structures when loading persisted model from disk.
-		This is done via injecting entities and intents back from cached file versions.
-		"""
+                Instantiates the necessary (internal) data structures when loading persisted model from disk.
+                This is done via injecting entities and intents back from cached file versions.
+                """
 
         # ToDo: still padaos.compile (regex compilation) is redone when loading
         for f in os.listdir(self.cache_dir):
             if f.startswith('{') and f.endswith('}.hash'):
                 entity_name = f[1:f.find('}.hash')]
-                self.add_entity(name=entity_name, lines=[], reload_cache=False, must_train=False)
+                self.add_entity(
+                    name=entity_name,
+                    lines=[],
+                    reload_cache=False,
+                    must_train=False)
             elif not f.startswith('{') and f.endswith('.hash'):
                 intent_name = f[0:f.find('.hash')]
-                self.add_intent(name=intent_name, lines=[], reload_cache=False, must_train=False)
+                self.add_intent(
+                    name=intent_name,
+                    lines=[],
+                    reload_cache=False,
+                    must_train=False)
 
     @_save_args
     def add_intent(self, name, lines, reload_cache=False, must_train=True):
@@ -110,15 +118,24 @@ class IntentContainer(object):
             name (str): The name of the entity
             lines (list<str>): Lines of example extracted entities
             reload_cache (bool): Whether to refresh all of cache
-        	must_train (bool): Whether to dismiss model if present and train from scratch again
+                must_train (bool): Whether to dismiss model if present and train from scratch again
         """
         Entity.verify_name(name)
-        self.entities.add(Entity.wrap_name(name), lines, reload_cache, must_train)
+        self.entities.add(
+            Entity.wrap_name(name),
+            lines,
+            reload_cache,
+            must_train)
         self.padaos.add_entity(name, lines)
         self.must_train = must_train
 
     @_save_args
-    def load_entity(self, name, file_name, reload_cache=False, must_train=True):
+    def load_entity(
+            self,
+            name,
+            file_name,
+            reload_cache=False,
+            must_train=True):
         """
        Loads an entity, optionally checking the cache first
 
@@ -140,7 +157,12 @@ class IntentContainer(object):
         self.load_intent(*args, **kwargs)
 
     @_save_args
-    def load_intent(self, name, file_name, reload_cache=False, must_train=True):
+    def load_intent(
+            self,
+            name,
+            file_name,
+            reload_cache=False,
+            must_train=True):
         """
         Loads an intent, optionally checking the cache first
 
@@ -169,8 +191,16 @@ class IntentContainer(object):
         self.padaos.remove_entity(name)
 
     def _train(self, *args, **kwargs):
-        t1 = Thread(target=self.intents.train, args=args, kwargs=kwargs, daemon=True)
-        t2 = Thread(target=self.entities.train, args=args, kwargs=kwargs, daemon=True)
+        t1 = Thread(
+            target=self.intents.train,
+            args=args,
+            kwargs=kwargs,
+            daemon=True)
+        t2 = Thread(
+            target=self.entities.train,
+            args=args,
+            kwargs=kwargs,
+            daemon=True)
         t1.start()
         t2.start()
         t1.join()
@@ -221,7 +251,9 @@ class IntentContainer(object):
             '-k', json.dumps(kwargs),
         ])
         if ret == 2:
-            raise TypeError('Invalid train arguments: {} {}'.format(args, kwargs))
+            raise TypeError(
+                'Invalid train arguments: {} {}'.format(
+                    args, kwargs))
         data = self.serialized_args
         self.clear()
         self.apply_training_args(data)
@@ -232,7 +264,8 @@ class IntentContainer(object):
         elif ret == 10:  # timeout
             return False
         else:
-            raise ValueError('Training failed and returned code: {}'.format(ret))
+            raise ValueError(
+                'Training failed and returned code: {}'.format(ret))
 
     def calc_intents(self, query):
         """
@@ -253,7 +286,8 @@ class IntentContainer(object):
         sent = tokenize(query)
         for perfect_match in self.padaos.calc_intents(query):
             name = perfect_match['name']
-            intents[name] = MatchData(name, sent, matches=perfect_match['entities'], conf=1.0)
+            intents[name] = MatchData(
+                name, sent, matches=perfect_match['entities'], conf=1.0)
         return list(intents.values())
 
     def calc_intent(self, query):
@@ -270,8 +304,10 @@ class IntentContainer(object):
         if len(matches) == 0:
             return MatchData('', '')
         best_match = max(matches, key=lambda x: x.conf)
-        best_matches = (match for match in matches if match.conf == best_match.conf)
-        return min(best_matches, key=lambda x: sum(map(len, x.matches.values())))
+        best_matches = (
+            match for match in matches if match.conf == best_match.conf)
+        return min(best_matches, key=lambda x: sum(
+            map(len, x.matches.values())))
 
     def get_training_args(self):
         return self.serialized_args
