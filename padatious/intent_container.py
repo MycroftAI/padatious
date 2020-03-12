@@ -112,7 +112,7 @@ class IntentContainer(object):
 
         Example:
             self.add_intent('weather', ['will it rain on {weekday}?'])
-            self.add_entity('{weekday}', ['monday', 'tuesday', 'wednesday'])  # ...
+            self.add_entity('weekday', ['monday', 'tuesday', 'wednesday'])  # ...
 
         Args:
             name (str): The name of the entity
