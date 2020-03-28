@@ -24,8 +24,14 @@ from padatious.intent_container import IntentContainer
 
 
 class TestIntentContainer:
-    test_lines = ['this is a test', 'another test']
-    other_lines = ['something else', 'this is a different thing']
+    test_lines = ['this is a test\n', 'another test\n']
+    other_lines = ['something else\n', 'this is a different thing\n']
+    test_lines_with_entities = ['this is a {test}\n', 'another {test}\n']
+    other_lines_with_entities = [
+        'something {other}\n',
+        'this is a {other} thing\n']
+    test_entities = ['test\n', 'assessment\n']
+    other_entities = ['else\n', 'different\n']
 
     def setup(self):
         self.cont = IntentContainer('temp')
@@ -59,11 +65,35 @@ class TestIntentContainer:
         test(False, False)
         test(True, True)
 
+    def _write_train_data(self):
+
+        if not isdir('temp'):
+            mkdir('temp')
+
+        fn1 = join('temp', 'test.intent')
+        with open(fn1, 'w') as f:
+            f.writelines(self.test_lines_with_entities)
+
+        fn2 = join('temp', 'other.intent')
+        with open(fn2, 'w') as f:
+            f.writelines(self.other_lines_with_entities)
+
+        fn1 = join('temp', 'test.entity')
+        with open(fn1, 'w') as f:
+            f.writelines(self.test_entities)
+
+        fn2 = join('temp', 'other.entity')
+        with open(fn2, 'w') as f:
+            f.writelines(self.other_entities)
+
     def test_instantiate_from_disk(self):
         # train and cache (i.e. persist)
         self.setup()
         self.test_add_intent()
+        self.cont.add_entity('test', self.test_entities)
+        self.cont.add_entity('other', self.other_entities)
         self.cont.train()
+        self._write_train_data()
 
         # instantiate from disk (load cached files)
         self.setup()
@@ -72,6 +102,9 @@ class TestIntentContainer:
         assert len(self.cont.intents.train_data.sent_lists) == 0
         assert len(self.cont.intents.objects_to_train) == 0
         assert len(self.cont.intents.objects) == 2
+
+        result = self.cont.calc_intent('something different')
+        assert result.matches['other'] == 'different'
 
     def _create_large_intent(self, depth):
         if depth == 0:

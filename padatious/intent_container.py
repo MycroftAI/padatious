@@ -70,24 +70,44 @@ class IntentContainer(object):
 
     def instantiate_from_disk(self):
         """
-                Instantiates the necessary (internal) data structures when loading persisted model from disk.
-                This is done via injecting entities and intents back from cached file versions.
-                """
+        Instantiates the necessary (internal) data structures when loading persisted model from disk.
+        This is done via injecting entities and intents back from cached file versions.
+        """
 
-        # ToDo: still padaos.compile (regex compilation) is redone when loading
+        entity_traindata = {}
+        intent_traindata = {}
+
+        # workaround: load training data for both entities and intents since
+        # padaos regex needs it for (re)compilation until TODO is cleared
         for f in os.listdir(self.cache_dir):
+            if f.endswith('.entity'):
+                entity_name = f[0:f.find('.entity')]
+                with open(os.path.join(self.cache_dir, f), 'r') as d:
+                    entity_traindata[entity_name] = [line.strip()
+                                                     for line in d]
+
+            elif f.endswith('.intent'):
+                intent_name = f[0:f.find('.intent')]
+                with open(os.path.join(self.cache_dir, f), 'r') as d:
+                    intent_traindata[intent_name] = [line.strip()
+                                                     for line in d]
+
+        # TODO: padaos.compile (regex compilation) is redone when loading: find
+        # a way to persist regex, as well!
+        for f in os.listdir(self.cache_dir):
+
             if f.startswith('{') and f.endswith('}.hash'):
                 entity_name = f[1:f.find('}.hash')]
                 self.add_entity(
                     name=entity_name,
-                    lines=[],
+                    lines=entity_traindata[entity_name],
                     reload_cache=False,
                     must_train=False)
             elif not f.startswith('{') and f.endswith('.hash'):
                 intent_name = f[0:f.find('.hash')]
                 self.add_intent(
                     name=intent_name,
-                    lines=[],
+                    lines=intent_traindata[intent_name],
                     reload_cache=False,
                     must_train=False)
 
@@ -118,7 +138,6 @@ class IntentContainer(object):
             name (str): The name of the entity
             lines (list<str>): Lines of example extracted entities
             reload_cache (bool): Whether to refresh all of cache
-                must_train (bool): Whether to dismiss model if present and train from scratch again
         """
         Entity.verify_name(name)
         self.entities.add(
@@ -143,7 +162,6 @@ class IntentContainer(object):
            name (str): The associated name of the entity
            file_name (str): The location of the entity file
            reload_cache (bool): Whether to refresh all of cache
-           must_train (bool): Whether to dismiss model if present and train from scratch again
        """
         Entity.verify_name(name)
         self.entities.load(Entity.wrap_name(name), file_name, reload_cache)
@@ -170,7 +188,6 @@ class IntentContainer(object):
             name (str): The associated name of the intent
             file_name (str): The location of the intent file
             reload_cache (bool): Whether to refresh all of cache
-            must_train (bool): Whether to dismiss model if present and train from scratch again
         """
         self.intents.load(name, file_name, reload_cache)
         with open(file_name) as f:
