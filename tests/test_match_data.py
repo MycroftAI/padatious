@@ -18,6 +18,7 @@ from padatious.match_data import MatchData
 class TestMatchData:
     def setup(self):
         self.match = MatchData('name', ['one', 'two'], {'{word}': ['value', 'tokens']}, 0.5)
+        self.sentence = ["it", "'", "s", "a", "new", "sentence"]
 
     def test_detokenize(self):
         self.match.detokenize()
@@ -25,3 +26,7 @@ class TestMatchData:
 
         correct_match = MatchData('name', 'one two', {'word': 'value tokens'}, 0.5)
         assert self.match.__dict__ == correct_match.__dict__
+
+    def test_handle_apostrophes(self):
+        joined_sentence = self.match.handle_apostrophes(self.sentence)
+        assert joined_sentence == "it's a new sentence"
