@@ -49,7 +49,6 @@ class MatchData(object):
         """
         new_sentence = ''
         apostrophe_present = False
-
         for word in old_sentence:
             if word == "'":
                 apostrophe_present = True
@@ -58,15 +57,19 @@ class MatchData(object):
                 # If the apostrophe is present we don't want to add
                 # a whitespace after the apostrophe
                 if apostrophe_present:
-                    new_sentence += word
-                    apostrophe_present = False
+                    # If the word after the apostrophe is longer than a character long assume that
+                    # the previous word is an "s" + apostrophe instead of "word + apostrophe
+                    if len(word) > 1:
+                        new_sentence += " " + word
+                    else:
+                        new_sentence += word
+                        apostrophe_present = False
                 else:
                     if len(new_sentence) > 0:
                         new_sentence += " " + word
                     else:
                         new_sentence = word
         return new_sentence
-
     # Converts parameters from lists of tokens to one combined string
     def detokenize(self):
         self.sent = self.handle_apostrophes(self.sent)
