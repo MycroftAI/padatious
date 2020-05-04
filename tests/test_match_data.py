@@ -19,6 +19,7 @@ class TestMatchData:
     def setup(self):
         self.match = MatchData('name', ['one', 'two'], {'{word}': ['value', 'tokens']}, 0.5)
         self.sentence = ["it", "'", "s", "a", "new", "sentence"]
+        self.sentence2 = ["the", "parents", "'", "house"]
 
     def test_detokenize(self):
         self.match.detokenize()
@@ -29,4 +30,6 @@ class TestMatchData:
 
     def test_handle_apostrophes(self):
         joined_sentence = self.match.handle_apostrophes(self.sentence)
+        joined_sentence2 = self.match.handle_apostrophes(self.sentence2)
         assert joined_sentence == "it's a new sentence"
+        assert joined_sentence2 == "the parents' house"
