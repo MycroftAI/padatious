@@ -11,9 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import TimeoutError
 from functools import partial
-from multiprocessing.context import TimeoutError
 from os.path import join, isfile, isdir, splitext
 
 import padatious
@@ -95,15 +95,18 @@ class TrainingManager(object):
                 train(i)
         else:
             # Train in multiple processes to disk
-            pool = mp.Pool()
+            pool = ProcessPoolExecutor()
             try:
-                pool.map_async(train, self.objects_to_train).get(timeout)
+                _ = list(pool.map(train,
+                                  self.objects_to_train,
+                                  timeout=timeout))
+
             except TimeoutError:
                 if debug:
                     print('Some objects timed out while training')
             finally:
-                pool.close()
-                pool.join()
+                pass
+                # No explicit shutdown, let the it complete in the background.
 
         # Load saved objects from disk
         for obj in self.objects_to_train:
