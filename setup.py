@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from os.path import join, basename, abspath, dirname
+from os.path import join, abspath, dirname
 from setuptools import setup
 
 with open(join(dirname(abspath(__file__)), 'requirements.txt')) as f:
