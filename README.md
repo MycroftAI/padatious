@@ -29,7 +29,7 @@ Padatious requires the following native packages to be installed:
 Ubuntu:
 
 ```
-sudo apt-get install libfann-dev python3-dev python3-pip swig
+sudo apt-get install libfann-dev python3-dev python3-pip swig libfann-dev python3-fann2
 ```
 
 Next, install Padatious via `pip3`:
