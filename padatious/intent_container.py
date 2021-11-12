@@ -18,7 +18,7 @@ import os
 import padaos
 import sys
 from functools import wraps
-from subprocess import call, check_output
+from subprocess import call, check_output, TimeoutExpired
 from threading import Thread
 
 from padatious.match_data import MatchData
@@ -261,12 +261,16 @@ class IntentContainer(object):
         Returns:
             bool: True for success, False if timed out
         """
-        ret = call([
-            sys.executable, '-m', 'padatious', 'train', self.cache_dir,
-            '-d', json.dumps(self.serialized_args),
-            '-a', json.dumps(args),
-            '-k', json.dumps(kwargs),
-        ])
+        try:
+            ret = call([
+                sys.executable, '-m', 'padatious', 'train', self.cache_dir,
+                '-d', json.dumps(self.serialized_args),
+                '-a', json.dumps(args),
+                '-k', json.dumps(kwargs),
+            ], timeout=kwargs.get('timeout'))
+        except TimeoutExpired:
+            ret = 10  # Treat process timeout as internal timeout
+
         if ret == 2:
             raise TypeError(
                 'Invalid train arguments: {} {}'.format(
